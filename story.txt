@@ -1,3 +1,41 @@
-﻿The old lighthouse stood as a silent sentinel against the crashing waves. For over a century, its beam had cut through the darkest storms, guiding sailors safely home. Elias, the keeper, climbed the spiral stairs with a weary but determined step. The wind howled outside, rattling the thick glass panes, but inside, the air was warm and smelled of oil and salt.
-He reached the lantern room and checked the mechanism. It was a precise arrangement of gears and lenses, a masterpiece of engineering from a bygone era. Elias polished the brass fittings, his reflection distorted in the golden metal. He knew that tonight would be difficult; the radio had warned of a hurricane approaching from the east.
-As the first heavy drops of rain struck the glass, Elias engaged the rotation gear. The massive lens began to turn, casting its rhythmic light across the turbulent ocean. Flash. Darkness. Flash. Darkness. It was a heartbeat for the coast, a promise that someone was watching. Down below, the village lights flickered and died as the power grid failed, but the lighthouse beam remained constant, powered by its trusty generator. Elias sat in his chair, watching the storm unleash its fury, knowing that as long as he was there, the light would not fail.
+﻿Juned is a Generative AI Engineer and Full Stack Developer based in Bengaluru, India. 
+He specializes in building AI-powered systems, full stack web applications, and scalable AI solutions.
+
+Juned has professional experience as a Full Stack Web Development Intern at Edunet Foundation under EY GDS and AICTE from February 2025 to March 2025. 
+During this internship, he built an online auction platform using the MERN stack. 
+He designed RESTful APIs and optimized MongoDB queries to improve application performance.
+
+He worked as an AI and Robotics Master Trainer at Agilo Research, also known as STEMpedia, in Bengaluru from August 2022 to July 2023. 
+In this role, he delivered hands-on training in artificial intelligence, machine learning, robotics, and coding.
+He mentored student teams for the CODEAVOUR International AI Competition.
+
+Earlier, Juned served as a TinkerLab Trainer Intern at Samarthanam Trust for the Disabled from January 2022 to March 2022.
+He conducted STEM and robotics training programs across seven government schools, focusing on foundational technology education.
+
+Juned has built several impactful projects.
+One of his major projects is AI Guru J, an intelligent 3D Python tutor.
+This project uses React, Three.js, FastAPI, Groq, MongoDB, and Render.
+The system features a 3D AI tutor with speech-based question answering and a real-time lip-synced avatar.
+It integrates large language models for natural language understanding, text-to-speech, and backend AI services.
+
+Another project developed by Juned is a Face Emotion Recognition System.
+He trained a convolutional neural network using TensorFlow and Keras on the FER-2013 dataset.
+The system performs real-time facial emotion detection using OpenCV.
+
+Juned also developed an Online Auction Platform using the MERN stack.
+This platform supports real-time bidding and full-stack auction workflows.
+
+In terms of education, Juned is pursuing a Bachelor of Technology in Computer Science and Engineering at M. S. Ramaiah University of Applied Sciences.
+His academic tenure spans from 2023 to 2026, and he maintains a CGPA of 8.41.
+
+He completed a Diploma in Computer Science and Engineering from Dr. T. M. A. Pai Polytechnic between 2018 and 2022.
+He also completed his Senior Secondary education in PCMC at Holy Redeemer Composite PU College, Hosanagar.
+
+Juned’s technical skill set includes frontend technologies such as React.js, Next.js, HTML, CSS, and JavaScript.
+His backend expertise includes Node.js, Express.js, FastAPI, MongoDB, and MySQL.
+He has strong experience in Generative AI and machine learning, including Python, vector databases, large language models, prompt engineering, retrieval augmented generation, LangChain, TensorFlow, Pandas, and natural language processing.
+He is also familiar with DevOps tools such as Docker, Git, GitHub, AWS basics, and Postman.
+His computer science fundamentals include object-oriented programming, data structures and algorithms, AI system design, and machine learning concepts.
+
+Juned has earned multiple certifications.
+These include Generative AI for Software Developers from Coursera, NoSQL Big Data and Spark Foundations from IBM Skill Network, Aptitude Training from PrepInsta, and Building Modern Web Applications with the MERN Stack from EY GDS and AICTE.
