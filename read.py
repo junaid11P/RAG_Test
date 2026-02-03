@@ -1,4 +1,4 @@
-with open("story.txt", "r", encoding="utf-8") as f:
+with open("Resume.txt", "r", encoding="utf-8") as f:
     text = f.read()
 
 if __name__ == "__main__":
