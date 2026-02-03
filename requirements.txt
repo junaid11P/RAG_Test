@@ -1,2 +1,6 @@
 sentence-transformers
 numpy
+pymilvus
+ollama
+langchain
+langchain-community
