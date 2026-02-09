@@ -1,4 +1,4 @@
-def manual_chunk_text(text, chunk_size=500, chunk_overlap=50):
+def manual_chunk_text(text, chunk_size=1000, chunk_overlap=100):
     words = text.split(' ')
 
     chunks = []

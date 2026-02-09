@@ -4,10 +4,10 @@ from sentence_transformers import SentenceTransformer
 # Connect to Milvus
 connections.connect("default", host="localhost", port="19530")
 
-collection = Collection("resume_chunks")
+collection = Collection("story_chunks")
 collection.load()
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("sentence-transformers/multi-qa-distilbert-cos-v1", device="cpu")
 
 def search(query, top_k=3):
     query_embedding = model.encode([query]).tolist()
@@ -26,4 +26,6 @@ if __name__ == "__main__":
     results = search(q)
     print("\n--- Search Results ---")
     for hit in results[0]:
-        print(f"Score: {hit.score:.4f} | Text: {hit.entity.get('text')[:100]}...")
+        print(f"Score: {hit.score:.4f}")
+        print(f"Content: {hit.entity.get('text')}")
+        print("-" * 20)

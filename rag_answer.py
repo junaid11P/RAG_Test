@@ -10,9 +10,9 @@ def generate_rag_answer(question):
     
     # Create the prompt for Ollama
     prompt = f"""
-    You are an AI assistant helping with a resume query. 
+    You are an AI assistant helping with a story query. 
     Use the Context provided below to answer the Question accurately. 
-    If the answer is not in the context, say "I don't have that information in the resume."
+    If the answer is not in the context, say "I don't have that information in the story."
 
     Context:
     {context}
@@ -29,6 +29,18 @@ def generate_rag_answer(question):
         return f"Error using Ollama: {str(e)}"
 
 if __name__ == "__main__":
-    user_q = input("Ask a question about your resume: ")
-    print("\n--- AI ANSWER (Ollama) ---")
-    print(generate_rag_answer(user_q))
+    print("Story AI Assistant (type 'exit' or 'quit' to stop)")
+    while True:
+        user_q = input("\nAsk a question about the story: ")
+        
+        if user_q.lower() in ['exit', 'quit', 'q']:
+            print("Goodbye!")
+            break
+            
+        if not user_q.strip():
+            continue
+
+        print("\n--- AI ANSWER (Ollama) ---")
+        answer = generate_rag_answer(user_q)
+        print(answer)
+        print("-" * 30)

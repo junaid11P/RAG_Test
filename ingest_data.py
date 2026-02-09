@@ -1,4 +1,3 @@
-import numpy as np
 import read
 from chunk import manual_chunk_text
 from sentence_transformers import SentenceTransformer
@@ -8,17 +7,22 @@ from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Colle
 connections.connect(alias="default", host="localhost", port="19530")
 
 # 2. Define Schema and Create Collection
+from pymilvus import utility
+if utility.has_collection("story_chunks"):
+    utility.drop_collection("story_chunks")
+    print("Dropped old collection for a clean ingest.")
+
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
-    FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=384),
+    FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=768),
     FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=2000)
 ]
-schema = CollectionSchema(fields=fields, description="Resume RAG embeddings")
-collection = Collection(name="resume_chunks", schema=schema)
+schema = CollectionSchema(fields=fields, description="Story RAG embeddings")
+collection = Collection(name="story_chunks", schema=schema)
 
 # 3. Process Data (Chunking & Embedding)
-chunks = manual_chunk_text(read.text, chunk_size=500, chunk_overlap=50)
-model = SentenceTransformer("all-MiniLM-L6-v2")
+chunks = manual_chunk_text(read.text, chunk_size=1000, chunk_overlap=100)
+model = SentenceTransformer("sentence-transformers/multi-qa-distilbert-cos-v1", device="cpu")
 embeddings = model.encode(chunks)
 
 # 4. Insert Data

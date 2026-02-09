@@ -1,11 +1,11 @@
-# RAG Resume Search (Milvus + Ollama)
+# RAG Story Assistant (Milvus + Ollama)
 
-A local Retrieval-Augmented Generation (RAG) pipeline designed to search through resumes and answer questions using a vector database (Milvus) and a local LLM (Ollama).
+A local Retrieval-Augmented Generation (RAG) pipeline designed to search through stories and answer questions using a vector database (Milvus) and a local LLM (Ollama).
 
 ## 🚀 Features
 - **Local Vector Search**: Powered by Milvus for fast, high-dimensional similarity search.
 - **Local LLM**: Uses Ollama with `llama3.2` for private and secure response generation.
-- **Automated Ingestion**: Scripts to chunk, embed, and insert resume data.
+- **Automated Ingestion**: Scripts to chunk, embed, and insert story data.
 - **Visual Management**: Includes Attu for easy monitoring of your Milvus collections.
 
 ---
@@ -41,7 +41,7 @@ ollama pull llama3.2
 ---
 
 ## 📂 Project Structure
-- `ingest_data.py`: Reads `Resume.txt` and pushes chunks to Milvus.
+- `ingest_data.py`: Reads `story.txt` and pushes chunks to Milvus `story_chunks` collection.
 - `milvus_search.py`: Module for performing vector search on stored embeddings.
 - `rag_answer.py`: The main entry point to ask questions and get AI-generated answers.
 - `chunk.py` / `read.py`: Utility scripts for text processing.
@@ -52,13 +52,13 @@ ollama pull llama3.2
 ## 🏃 Usage
 
 ### Step 1: Ingest Data
-Prepare your resume text in `Resume.txt`, then run:
+Prepare your story text in `story.txt`, then run:
 ```bash
 python ingest_data.py
 ```
 
 ### Step 2: Search & Answer
-Ask questions about the uploaded resume:
+Ask questions about the story:
 ```bash
 python rag_answer.py
 ```
