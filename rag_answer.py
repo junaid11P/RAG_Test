@@ -1,4 +1,3 @@
-import sys
 import ollama
 from milvus_search import search
 

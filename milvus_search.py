@@ -1,4 +1,3 @@
-import ollama
 from pymilvus import connections, Collection
 from sentence_transformers import SentenceTransformer
 
@@ -22,20 +21,9 @@ def search(query, top_k=3):
     )
     return results
 
-def search_and_answer(query):
-    # 1. Retrieve relevant chunks from Milvus
-    results = search(query, top_k=3)
-    
-    # 2. Extract and join the context
-    context = "\n".join([hit.entity.get("text") for hit in results[0]])
-    
-    # 3. Generate the answer with Ollama
-    prompt = f"Use this context to answer: {context}\n\nQuestion: {query}"
-    response = ollama.generate(model='llama3.2', prompt=prompt)
-    
-    return response['response']
-
 if __name__ == "__main__":
-    q = input("Ask a question about the resume: ")
-    print("\n--- AI Answer ---")
-    print(search_and_answer(q))
+    q = input("Enter query to search in Milvus: ")
+    results = search(q)
+    print("\n--- Search Results ---")
+    for hit in results[0]:
+        print(f"Score: {hit.score:.4f} | Text: {hit.entity.get('text')[:100]}...")
