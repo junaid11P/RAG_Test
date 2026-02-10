@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pymupdf
+python-multipart
+langchain
+langchain-community
+sentence-transformers
+pydantic-settings
+python-dotenv
+groq
+motor
+passlib[bcrypt]
+python-jose[cryptography]
+python-docx
+pymongo[srv]
