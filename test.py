@@ -1,7 +1,7 @@
 import requests
 
 # 1. Your unique per-document API key from the Dashboard
-API_KEY = "RAGI_9f436ffadff04422b4caff951849a4ce"
+API_KEY = " "
 # 2. Base URL of your RAGI instance
 BASE_URL = "http://localhost:8000" 
 
