@@ -43,11 +43,12 @@ class DocumentProcessor:
         noise_patterns = [
             r"mailto:.*",
             r"https?://\S+",
-            r"linkedin\.com/\S+",
-            r"github\.com/\S+",
-            r"juned-portfolio\S+",
-            r"aiguruj\S+",
-            r"\bWork Experience\b.*\bCertifications\b"
+            r"www\.\S+",
+            r"copyright\s+©\s+\d{4}",
+            r"all rights reserved",
+            r"page\s+\d+\s+of\s+\d+",
+            r"(?i)confidential",
+            r"-----------------+"
         ]
         for pattern in noise_patterns:
             text = re.sub(pattern, "", text, flags=re.IGNORECASE)
