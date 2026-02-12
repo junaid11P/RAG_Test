@@ -5,7 +5,7 @@ const CreateKeyModal = ({ showCreateModal, setShowCreateModal, selectedDocId, se
 
     return (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-            <div className="glass modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div className="glass modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px', width: '90%', margin: '0 auto' }}>
                 <div className="modal-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800' }}>New API Key</h2>
                 </div>

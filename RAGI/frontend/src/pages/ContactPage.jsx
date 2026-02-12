@@ -11,7 +11,7 @@ const ContactPage = ({ setView }) => {
                 </p>
             </div>
 
-            <div className="pricing-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            <div className="pricing-grid">
                 {/* Email Support */}
                 <div className="plan-card" style={{ textAlign: 'center', alignItems: 'center' }}>
                     <div style={{

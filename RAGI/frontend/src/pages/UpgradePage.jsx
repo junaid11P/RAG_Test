@@ -20,13 +20,7 @@ const UpgradePage = ({ setView, user, setShowAuth }) => {
                 </p>
             </div>
 
-            <div className="pricing-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '32px',
-                maxWidth: '1200px',
-                margin: '0 auto'
-            }}>
+            <div className="pricing-grid">
                 {/* Free Plan */}
                 <div className="plan-card" style={{
                     position: 'relative',

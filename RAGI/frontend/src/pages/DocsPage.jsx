@@ -158,7 +158,7 @@ queryRagi('Give me a summary of this document')
                 </p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 500px', gap: '50px', alignItems: 'start' }}>
+            <div className="docs-grid">
 
                 {/* Left Side: Steps & Reference */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '50px' }}>
@@ -266,7 +266,7 @@ queryRagi('Give me a summary of this document')
                 </div>
 
                 {/* Right Side: Sticky Code Panel */}
-                <div style={{ position: 'sticky', top: '24px' }}>
+                <div className="docs-sidebar">
                     <div className="glass" style={{
                         borderRadius: '24px',
                         overflow: 'hidden',
@@ -362,15 +362,7 @@ queryRagi('Give me a summary of this document')
             </div>
 
             {/* Sub-Footer: Related Navigation */}
-            <div style={{
-                maxWidth: '100%',
-                margin: '100px auto 40px',
-                paddingTop: '60px',
-                borderTop: '1px solid var(--glass-border)',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '30px'
-            }}>
+            <div className="pricing-grid">
                 <div className="glass-card" onClick={() => setView('upgrade')} style={{ padding: '30px', borderRadius: '24px', cursor: 'pointer', transition: 'all 0.3s' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                         <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '8px', borderRadius: '10px' }}>

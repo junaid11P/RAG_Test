@@ -8,8 +8,8 @@ const AuthModal = ({ showAuth, setShowAuth, authMode, setAuthMode, email, setEma
             {showAuth && (
                 <div className="modal-overlay" onClick={() => setShowAuth(false)}>
                     <motion.div
-                        className="glass glass-card modal-content"
-                        style={{ maxWidth: '440px', width: '100%' }}
+                        className="glass glass-card modal-card"
+                        style={{ maxWidth: '440px', width: '90%', margin: '0 auto' }}
                         onClick={e => e.stopPropagation()}
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}

@@ -1203,3 +1203,234 @@ button:disabled {
     background: var(--groq-orange);
     box-shadow: 0 0 8px var(--groq-orange);
 }
+
+/* --- Mobile Responsiveness --- */
+
+@media screen and (max-width: 1024px) {
+    .app-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .main-content {
+        gap: 16px;
+    }
+
+    .sidebar {
+        width: 280px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    body {
+        overflow: auto;
+        height: auto;
+    }
+
+    .app-container {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    nav {
+        padding: 0 16px;
+        height: 70px;
+        border-radius: 16px !important;
+    }
+
+    .nav-links {
+        display: none !important;
+        /* Hide by default, will show with hamburger */
+    }
+
+    .main-content {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+        gap: 12px;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+
+    .chat-section {
+        height: 600px;
+        /* Fixed height for chat on mobile to allow scrolling main page */
+        min-height: 500px;
+    }
+
+    .messages-container {
+        padding: 16px;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .input-area {
+        padding: 16px;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .api-keys-container {
+        padding: 16px;
+    }
+
+    .api-keys-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .api-keys-table thead {
+        display: none;
+    }
+
+    .api-keys-table,
+    .api-keys-table tbody,
+    .api-keys-table tr,
+    .api-keys-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .api-keys-table tr {
+        margin-bottom: 16px;
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .api-keys-table td {
+        text-align: right;
+        padding: 12px 16px;
+        position: relative;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .api-keys-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 16px;
+        width: 45%;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .api-keys-table td:last-child {
+        border-bottom: none;
+    }
+
+    .actions-cell {
+        justify-content: flex-end;
+    }
+
+    /* Mobile Menu Drawer */
+    .mobile-menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        gap: 24px;
+    }
+
+    .mobile-menu-links {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .mobile-nav-btn {
+        width: 100%;
+        padding: 16px;
+        text-align: center;
+        font-size: 18px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+    }
+
+    .mobile-nav-btn.active {
+        background: var(--gradient);
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
+    .mobile-only {
+        display: block !important;
+    }
+}
+
+.docs-grid {
+    display: grid;
+    grid-template-columns: 1fr 500px;
+    gap: 50px;
+    align-items: start;
+}
+
+.docs-sidebar {
+    position: sticky;
+    top: 24px;
+}
+
+@media screen and (max-width: 1200px) {
+    .docs-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .docs-sidebar {
+        position: static;
+        order: -1;
+        /* Show code panel first or handle differently on small screens */
+    }
+}
+
+@media screen and (min-width: 769px) {
+    .mobile-only {
+        display: none !important;
+    }
+
+    .mobile-menu-overlay {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .pricing-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .plan-card {
+        transform: none !important;
+        /* Remove scale on mobile */
+    }
+}

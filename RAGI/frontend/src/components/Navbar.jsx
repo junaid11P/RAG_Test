@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LogOut, User, Sun, Moon, Monitor, Zap, Activity, MessageSquare, MessageCircle, Cookie, ChevronDown, Contact, Brain, BookOpen } from 'lucide-react';
+import { LogOut, User, Sun, Moon, Monitor, Zap, Activity, MessageSquare, MessageCircle, Cookie, ChevronDown, Contact, Brain, BookOpen, Menu, X } from 'lucide-react';
 
 const Navbar = ({ user, view, setView, logout, setShowAuth }) => {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     const menuRef = useRef(null);
 
     // Close menu when clicking outside
@@ -18,6 +19,14 @@ const Navbar = ({ user, view, setView, logout, setShowAuth }) => {
 
     const userEmail = user?.email || user?.id || 'Guest User';
     const userName = userEmail.split('@')[0];
+
+    const navItems = [
+        { id: 'chat', label: 'Chat', show: true },
+        { id: 'dev', label: 'API', show: !!user },
+        { id: 'docs', label: 'Docs', show: true },
+        { id: 'upgrade', label: 'Upgrade', show: true },
+        { id: 'contact', label: 'Contact', show: true },
+    ];
 
     return (
         <nav className="glass">
@@ -46,29 +55,22 @@ const Navbar = ({ user, view, setView, logout, setShowAuth }) => {
                 RAGI
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {/* Desktop Nav */}
+            <div className="desktop-nav" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div className="nav-links" style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                        className={`nav-btn ${view === 'chat' ? 'active' : ''}`}
-                        onClick={() => setView('chat')}>Chat</button>
-                    {user && (
+                    {navItems.filter(item => item.show).map(item => (
                         <button
-                            className={`nav-btn ${view === 'dev' ? 'active' : ''}`}
-                            onClick={() => setView('dev')}>API</button>
-                    )}
-                    <button
-                        className={`nav-btn ${view === 'docs' ? 'active' : ''}`}
-                        onClick={() => setView('docs')}>Docs</button>
-                    <button
-                        className={`nav-btn ${view === 'upgrade' ? 'active' : ''}`}
-                        onClick={() => setView('upgrade')}>Upgrade</button>
-                    <button
-                        className={`nav-btn ${view === 'contact' ? 'active' : ''}`}
-                        onClick={() => setView('contact')}>Contact</button>
+                            key={item.id}
+                            className={`nav-btn ${view === item.id ? 'active' : ''}`}
+                            onClick={() => setView(item.id)}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 {user ? (
                     <div className="profile-container" ref={menuRef}>
                         <div
@@ -99,9 +101,7 @@ const Navbar = ({ user, view, setView, logout, setShowAuth }) => {
                             }}>
                                 {userName.charAt(0).toUpperCase()}
                             </div>
-                            {user?.email && (
-                                <span style={{ fontSize: '13px', fontWeight: '600' }}>{userName}</span>
-                            )}
+                            <span className="desktop-only" style={{ fontSize: '13px', fontWeight: '600' }}>{userName}</span>
                             <ChevronDown size={14} style={{ opacity: 0.5 }} />
                         </div>
 
@@ -160,9 +160,101 @@ const Navbar = ({ user, view, setView, logout, setShowAuth }) => {
                         )}
                     </div>
                 ) : (
-                    <button className="primary-btn" style={{ padding: '10px 24px' }} onClick={() => setShowAuth(true)}>Login / Signup</button>
+                    <button className="primary-btn desktop-only" style={{ padding: '10px 24px' }} onClick={() => setShowAuth(true)}>Login</button>
                 )}
+
+                {/* Hamburger Overlay Button */}
+                <button
+                    className="mobile-only glass"
+                    onClick={() => setShowMobileMenu(true)}
+                    style={{
+                        padding: '10px',
+                        display: 'none', // Managed via CSS
+                        borderRadius: '12px',
+                        background: 'var(--glass-bg)',
+                        border: '1px solid var(--glass-border)'
+                    }}
+                >
+                    <Menu size={20} />
+                </button>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            {showMobileMenu && (
+                <div className="mobile-menu-overlay">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="logo" style={{ fontSize: '24px' }}>RAGI</div>
+                        <button
+                            onClick={() => setShowMobileMenu(false)}
+                            style={{ background: 'none', border: 'none', color: 'white' }}
+                        >
+                            <X size={28} />
+                        </button>
+                    </div>
+
+                    <div className="mobile-menu-links">
+                        {navItems.filter(item => item.show).map(item => (
+                            <button
+                                key={item.id}
+                                className={`mobile-nav-btn ${view === item.id ? 'active' : ''}`}
+                                onClick={() => {
+                                    setView(item.id);
+                                    setShowMobileMenu(false);
+                                }}
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                        {!user && (
+                            <button
+                                className="mobile-nav-btn"
+                                style={{ background: 'var(--gradient)' }}
+                                onClick={() => {
+                                    setShowAuth(true);
+                                    setShowMobileMenu(false);
+                                }}
+                            >
+                                Login / Signup
+                            </button>
+                        )}
+                    </div>
+
+                    {user && (
+                        <div style={{ marginTop: 'auto', borderTop: '1px solid var(--glass-border)', paddingTop: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                                <div style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    borderRadius: '50%',
+                                    background: 'var(--gradient)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '20px',
+                                    fontWeight: '800'
+                                }}>
+                                    {userName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: '700' }}>{userName}</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{user.email}</div>
+                                </div>
+                            </div>
+                            <button
+                                className="mobile-nav-btn"
+                                style={{ color: '#ff4444', borderColor: 'rgba(255, 68, 68, 0.2)' }}
+                                onClick={() => {
+                                    logout();
+                                    setShowMobileMenu(false);
+                                }}
+                            >
+                                <LogOut size={18} style={{ marginRight: '8px' }} />
+                                Logout
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </nav>
     );
 };

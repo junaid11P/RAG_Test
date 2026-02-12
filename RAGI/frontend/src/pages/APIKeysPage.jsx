@@ -58,8 +58,8 @@ const APIKeysPage = ({
                         ) : (
                             documents.map(doc => (
                                 <tr key={doc.id}>
-                                    <td className="doc-name-cell">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <td className="doc-name-cell" data-label="NAME">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                                             <div style={{
                                                 width: '8px',
                                                 height: '8px',
@@ -71,8 +71,8 @@ const APIKeysPage = ({
                                             </span>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div className="key-display-group">
+                                    <td data-label="SECRET KEY">
+                                        <div className="key-display-group" style={{ marginLeft: 'auto' }}>
                                             <code>
                                                 {doc.api_key ? `${doc.api_key.slice(0, 8)}...${doc.api_key.slice(-4)}` : '—'}
                                             </code>
@@ -86,18 +86,18 @@ const APIKeysPage = ({
                                             )}
                                         </div>
                                     </td>
-                                    <td style={{ color: '#8b949e', fontSize: '13px' }}>
+                                    <td data-label="CREATED" style={{ color: '#8b949e', fontSize: '13px' }}>
                                         {new Date(doc.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                     </td>
-                                    <td>
+                                    <td data-label="EXPIRES">
                                         <span className={`badge ${doc.is_premium ? 'success' : 'warning'}`}>
                                             {doc.is_premium ? 'Permanent' : 'Trial (2d)'}
                                         </span>
                                     </td>
-                                    <td style={{ textAlign: 'right' }}>
+                                    <td data-label="ACTIONS" style={{ textAlign: 'right' }}>
                                         <div className="actions-cell">
                                             {confirmRegenId === doc.id ? (
-                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                     <button className="btn-regen-active" onClick={() => {
                                                         generateKey(doc.id);
                                                         setConfirmRegenId(null);
@@ -105,7 +105,7 @@ const APIKeysPage = ({
                                                     <button className="btn-cancel-minimal" onClick={() => setConfirmRegenId(null)}>Cancel</button>
                                                 </div>
                                             ) : (
-                                                <>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                     <button className="icon-btn-action"
                                                         onClick={() => setConfirmRegenId(doc.id)}
                                                         title="Regenerate Key">
@@ -116,7 +116,7 @@ const APIKeysPage = ({
                                                         title="Delete Key">
                                                         <Trash2 size={15} />
                                                     </button>
-                                                </>
+                                                </div>
                                             )}
                                         </div>
                                     </td>
