@@ -4,7 +4,7 @@ pymupdf
 python-multipart
 langchain-community
 langchain-text-splitters
-sentence-transformers
+fastembed
 python-dotenv
 groq
 motor

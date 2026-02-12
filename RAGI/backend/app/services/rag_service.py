@@ -1,12 +1,13 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 import os
 from app.db.mongodb import db
 
 class RAGService:
     def __init__(self):
-        # Local embeddings - zero cost, 384 dimensions
-        self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        # FastEmbed is much lighter than HuggingFaceEmbeddings (no PyTorch)
+        # Using the same model name to maintain vector compatibility if possible
+        self.embeddings = FastEmbedEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=500,
             chunk_overlap=50
