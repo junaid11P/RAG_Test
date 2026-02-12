@@ -35,9 +35,9 @@ const Sidebar = ({ user, usage, uploading, file, handleFileUpload }) => {
                     Documents
                 </h3>
                 <label className="upload-zone">
-                    <input type="file" onChange={handleFileUpload} accept=".pdf,.txt,.docx,.doc" style={{ display: 'none' }} />
+                    <input type="file" onChange={handleFileUpload} accept=".pdf,.txt,.docx,.doc,.png,.jpg,.jpeg,.tiff" style={{ display: 'none' }} />
                     <FileText size={40} style={{ opacity: 0.5 }} />
-                    <p style={{ fontSize: '13px', fontWeight: '500' }}>{uploading ? 'Processing...' : file ? file.name : 'Click to Upload PDF, TXT, or Word'}</p>
+                    <p style={{ fontSize: '13px', fontWeight: '500' }}>{uploading ? 'Processing...' : file ? file.name : 'PDF, DOCX, TXT or Images'}</p>
                 </label>
             </div>
         </div>

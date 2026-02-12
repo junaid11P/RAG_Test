@@ -1,124 +1,208 @@
 import React from 'react';
-import { Check, Zap, ExternalLink } from 'lucide-react';
+import { Check, Zap, Shield, Rocket, Globe } from 'lucide-react';
 
 const UpgradePage = ({ setView, user, setShowAuth }) => {
     return (
-        <div className="upgrade-page">
-            <div className="upgrade-header">
-                <h1>Billing</h1>
-                <div className="upgrade-tabs">
-                    <div className="upgrade-tab active">Plans</div>
-                </div>
+        <div className="upgrade-page" style={{ padding: '0 20px 40px' }}>
+            <div className="upgrade-header" style={{ textAlign: 'center', marginBottom: '60px' }}>
+                <h1 style={{
+                    fontSize: '48px',
+                    fontWeight: '800',
+                    marginBottom: '16px',
+                    background: 'var(--gradient)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                }}>
+                    Elevate Your RAG Experience
+                </h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>
+                    Unlock permanent storage, unlimited API access, and enterprise-grade security.
+                </p>
             </div>
 
-            <div className="pricing-grid">
+            <div className="pricing-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '32px',
+                maxWidth: '1200px',
+                margin: '0 auto'
+            }}>
                 {/* Free Plan */}
-                <div className="plan-card free highlight">
-                    <div className="plan-type">
-                        <Zap size={16} fill="currentColor" /> Free / Trial
+                <div className="plan-card" style={{
+                    position: 'relative',
+                    background: 'var(--glass-bg)',
+                    borderRadius: '24px',
+                    padding: '40px',
+                    border: '1px solid var(--glass-border)',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
+                    <div style={{ marginBottom: '32px' }}>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>Essential</div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '800' }}>Free Trial</h2>
                     </div>
-                    <p className="plan-desc">Great for getting started and testing your RAG pipelines</p>
-                    <div className="plan-price">
-                        <span className="price-amount">$0</span>
-                    </div>
-                    <button className="plan-btn btn-current">Current Plan</button>
 
-                    <div className="feature-list">
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>2-Day Document Retention</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Per-Document API Keys</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Basic Vector Indexing</span>
-                        </div>
+                    <div style={{ marginBottom: '32px' }}>
+                        <span style={{ fontSize: '48px', fontWeight: '800' }}>$0</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>/forever</span>
+                    </div>
+
+                    <button className="plan-btn" style={{
+                        width: '100%',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.05)',
+                        color: 'white',
+                        border: '1px solid var(--glass-border)',
+                        fontWeight: '700',
+                        marginBottom: '32px'
+                    }}>
+                        Current Plan
+                    </button>
+
+                    <div className="feature-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                        <FeatureItem text="2-Day Document Retention" />
+                        <FeatureItem text="Per-Document API Keys" />
+                        <FeatureItem text="Standard Vector Indexing" />
+                        <FeatureItem text="Community Support" />
                     </div>
                 </div>
 
-                {/* Developer Plan */}
-                <div className="plan-card dev">
-                    <div className="plan-type" style={{ color: 'var(--groq-orange)' }}>Developer Pro</div>
-                    <p className="plan-desc">Perfect for scaling applications with permanent document context</p>
-                    <div className="plan-price">
-                        <span className="price-unit">Usage Based</span>
+                {/* Developer Pro Plan */}
+                <div className="plan-card" style={{
+                    position: 'relative',
+                    background: 'rgba(139, 92, 246, 0.05)',
+                    borderRadius: '24px',
+                    padding: '40px',
+                    border: '2px solid var(--accent-color)',
+                    boxShadow: '0 0 40px rgba(139, 92, 246, 0.15)',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transform: 'scale(1.05)',
+                    zIndex: 2
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '-15px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'var(--gradient)',
+                        padding: '6px 16px',
+                        borderRadius: '100px',
+                        fontSize: '12px',
+                        fontWeight: '800',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                    }}>
+                        Most Popular
                     </div>
+
+                    <div style={{ marginBottom: '32px' }}>
+                        <div style={{ color: 'var(--accent-color)', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>Professional</div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '800' }}>Developer Pro</h2>
+                    </div>
+
+                    <div style={{ marginBottom: '16px' }}>
+                        <span style={{ fontSize: '48px', fontWeight: '800' }}>Pay-As-You-Go</span>
+                    </div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '32px' }}>
+                        $0.10/MB • $0.01/Query
+                    </p>
+
                     <button
-                        className="plan-btn btn-upgrade"
-                        onClick={() => {
-                            if (user) {
-                                window.open('https://stripe.com', '_blank'); // Placeholder for actual upgrade
-                            } else {
-                                setShowAuth(true);
-                            }
+                        className="primary-btn"
+                        style={{
+                            width: '100%',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            fontWeight: '700',
+                            marginBottom: '32px',
+                            cursor: 'pointer'
                         }}
+                        onClick={() => user ? setView('payment') : setShowAuth(true)}
                     >
                         {user ? 'Upgrade Now' : 'Login to Upgrade'}
                     </button>
-                    <p className="sub-text">
-                        $0.10 per MB • $0.01 per Query. <a href="#">Billing FAQ</a>
-                    </p>
 
-                    <div className="feature-list">
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Permanent Document Storage</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Unlimited API Keys</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Premium Support Tier</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Full Conversation History</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Custom Spend Limits</span>
-                        </div>
+                    <div className="feature-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                        <FeatureItem text="Permanent Document Storage" highlight />
+                        <FeatureItem text="Global API Keys (Full Account)" highlight />
+                        <FeatureItem text="Priority Vector Processing" highlight />
+                        <FeatureItem text="Full Conversation History" highlight />
+                        <FeatureItem text="Custom Usage Limits" highlight />
+                        <FeatureItem text="Email Support" highlight />
                     </div>
                 </div>
 
                 {/* Enterprise Plan */}
-                <div className="plan-card enterprise">
-                    <div className="plan-type" style={{ color: 'var(--groq-orange)' }}>Enterprise</div>
-                    <p className="plan-desc">Advanced security and scalability for high-volume enterprise needs</p>
-                    <div className="plan-price" style={{ minHeight: '48px' }}></div>
-                    <button className="plan-btn btn-contact" onClick={() => setView('contact')}>Contact Sales</button>
+                <div className="plan-card" style={{
+                    position: 'relative',
+                    background: 'var(--glass-bg)',
+                    borderRadius: '24px',
+                    padding: '40px',
+                    border: '1px solid var(--glass-border)',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
+                    <div style={{ marginBottom: '32px' }}>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '8px' }}>Scalable</div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '800' }}>Enterprise</h2>
+                    </div>
 
-                    <div className="feature-list">
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Everything in Pro, Plus:</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Dedicated Vector Clusters</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>SLA-backed Uptime</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>SSO & Team Management</span>
-                        </div>
-                        <div className="feature-item">
-                            <Check size={16} className="check-icon" />
-                            <span>Custom Data Governance</span>
-                        </div>
+                    <div style={{ marginBottom: '32px' }}>
+                        <span style={{ fontSize: '48px', fontWeight: '800' }}>Custom</span>
+                    </div>
+
+                    <button
+                        className="plan-btn"
+                        style={{
+                            width: '100%',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            background: 'rgba(255,255,255,0.05)',
+                            color: 'white',
+                            border: '1px solid var(--glass-border)',
+                            fontWeight: '700',
+                            marginBottom: '32px',
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => setView('contact')}
+                    >
+                        Contact Sales
+                    </button>
+
+                    <div className="feature-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                        <FeatureItem text="Everything in Pro" />
+                        <FeatureItem text="Dedicated Compute Clusters" />
+                        <FeatureItem text="SLA & Uptime Guarantees" />
+                        <FeatureItem text="Custom Governance & SSO" />
+                        <FeatureItem text="24/7 Dedicated Support" />
                     </div>
                 </div>
             </div>
         </div>
     );
 };
+
+const FeatureItem = ({ text, highlight }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px' }}>
+        <div style={{
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            background: highlight ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+        }}>
+            <Check size={12} color="white" strokeWidth={3} />
+        </div>
+        <span style={{ color: highlight ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{text}</span>
+    </div>
+);
 
 export default UpgradePage;

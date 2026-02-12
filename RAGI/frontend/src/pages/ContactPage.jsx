@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, MessageCircle, HelpCircle, Globe, Github, Linkedin } from 'lucide-react';
 
-const ContactPage = () => {
+const ContactPage = ({ setView }) => {
     return (
         <div className="upgrade-page">
             <div className="upgrade-header">
@@ -59,7 +59,13 @@ const ContactPage = () => {
                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px', lineHeight: '1.6' }}>
                         Browse our documentation and community forums for quick answers.
                     </p>
-                    <button className="btn-upgrade" style={{ width: '100%' }}>Visit Docs</button>
+                    <button
+                        className="btn-upgrade"
+                        style={{ width: '100%' }}
+                        onClick={() => setView('docs')}
+                    >
+                        Visit Docs
+                    </button>
                 </div>
 
                 {/* Feedback */}
@@ -81,7 +87,13 @@ const ContactPage = () => {
                     <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px', lineHeight: '1.6' }}>
                         Have a feature request or found a bug? We'd love to hear from you.
                     </p>
-                    <button className="btn-upgrade" style={{ width: '100%' }}>Give Feedback</button>
+                    <button
+                        className="btn-upgrade"
+                        style={{ width: '100%' }}
+                        onClick={() => window.location.href = 'mailto:junedjnr9632@gmail.com?subject=Feedback for RAGI'}
+                    >
+                        Give Feedback
+                    </button>
                 </div>
             </div>
 
@@ -94,7 +106,7 @@ const ContactPage = () => {
                     <a href="https://juned-portfolio.onrender.com/" target="_blank" rel="noopener noreferrer" className="theme-icon" style={{ opacity: 0.6 }}><Globe size={20} /></a>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

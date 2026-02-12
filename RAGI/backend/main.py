@@ -12,6 +12,7 @@ from app.services.rag_service import RAGService
 from app.services.llm_service import LLMService
 from app.services.usage_service import UsageService
 from app.services.chat_service import ChatService
+from app.services.payment_service import PaymentService
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.api.auth import router as auth_router
 from app.core.security import SECRET_KEY, ALGORITHM
@@ -100,7 +101,7 @@ async def root():
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     # 1. Validation
-    allowed_extensions = {".pdf", ".txt", ".docx", ".doc"}
+    allowed_extensions = {".pdf", ".txt", ".docx", ".doc", ".png", ".jpg", ".jpeg", ".tiff"}
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail=f"Supported formats: {', '.join(allowed_extensions)}")
@@ -321,6 +322,26 @@ async def get_usage(user_id: str = Depends(get_current_user_required)):
     if not usage_stats:
         raise HTTPException(status_code=404, detail="User not found")
     return usage_stats
+
+@app.post("/api/payments/verify")
+async def submit_payment_verification(
+    data: dict, 
+    user_id: str = Depends(get_current_user_required)
+):
+    utr = data.get("utr_number")
+    email = data.get("email")
+    v_type = data.get("type", "upgrade")
+    
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    vid = await PaymentService.submit_verification(user_id, utr, email, type=v_type)
+    return {"status": "success", "verification_id": vid, "message": "Verification request submitted successfully"}
+
+@app.get("/api/payments/status")
+async def get_payment_status(user_id: str = Depends(get_current_user_required)):
+    verifications = await PaymentService.get_user_verifications(user_id)
+    return verifications
 
 if __name__ == "__main__":
     import uvicorn

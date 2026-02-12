@@ -12,3 +12,6 @@ passlib[bcrypt]
 python-jose[cryptography]
 python-docx
 email-validator
+pdfplumber
+Pillow
+pytesseract

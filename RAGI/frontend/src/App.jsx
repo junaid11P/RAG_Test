@@ -7,6 +7,7 @@ import APIKeysPage from './pages/APIKeysPage';
 import UpgradePage from './pages/UpgradePage';
 import ContactPage from './pages/ContactPage';
 import DocsPage from './pages/DocsPage';
+import PaymentPage from './pages/PaymentPage';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
@@ -283,7 +284,9 @@ function App() {
         ) : view === 'upgrade' ? (
           <UpgradePage setView={setView} user={user} setShowAuth={setShowAuth} />
         ) : view === 'contact' ? (
-          <ContactPage />
+          <ContactPage setView={setView} />
+        ) : view === 'payment' ? (
+          <PaymentPage setView={setView} user={user} />
         ) : (
           <DocsPage setView={setView} user={user} setShowAuth={setShowAuth} />
         )}
