@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, MessageCircle, HelpCircle, Globe, Github, Twitter } from 'lucide-react';
+import { Mail, MessageCircle, HelpCircle, Globe, Github, Linkedin } from 'lucide-react';
 
 const ContactPage = () => {
     return (
@@ -32,11 +32,11 @@ const ContactPage = () => {
                         For technical issues, billing inquiries, or general questions.
                     </p>
                     <a
-                        href="mailto:ragi@support.com"
+                        href="mailto:junedjnr9632@gmail.com"
                         className="primary-btn"
                         style={{ textDecoration: 'none', width: '100%', textAlign: 'center', padding: '12px' }}
                     >
-                        ragi@support.com
+                        junedjnr9632@gmail.com
                     </a>
                 </div>
 
@@ -89,9 +89,9 @@ const ContactPage = () => {
             <div style={{ marginTop: '60px', textAlign: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '40px' }}>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '20px', letterSpacing: '1px', fontWeight: '800' }}>FOLLOW US</p>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
-                    <a href="#" className="theme-icon" style={{ opacity: 0.6 }}><Github size={20} /></a>
-                    <a href="#" className="theme-icon" style={{ opacity: 0.6 }}><Twitter size={20} /></a>
-                    <a href="#" className="theme-icon" style={{ opacity: 0.6 }}><Globe size={20} /></a>
+                    <a href="https://github.com/junaid11P" target="_blank" rel="noopener noreferrer" className="theme-icon" style={{ opacity: 0.6 }}><Github size={20} /></a>
+                    <a href="https://www.linkedin.com/in/juned11/" target="_blank" rel="noopener noreferrer" className="theme-icon" style={{ opacity: 0.6 }}><Linkedin size={20} /></a>
+                    <a href="https://juned-portfolio.onrender.com/" target="_blank" rel="noopener noreferrer" className="theme-icon" style={{ opacity: 0.6 }}><Globe size={20} /></a>
                 </div>
             </div>
         </div>
