@@ -18,7 +18,13 @@ except ImportError:
     Image = None
     pytesseract = None
 
+try:
+    from markitdown import MarkItDown
+except ImportError:
+    MarkItDown = None
+
 class DocumentProcessor:
+    _md = MarkItDown() if MarkItDown else None
     @staticmethod
     def extract_text_from_pdf(pdf_path: str) -> str:
         """Extracts text from a PDF with layout awareness and table support."""
@@ -130,6 +136,18 @@ class DocumentProcessor:
         """Complete production pipeline: Table & Layout extraction + optional OCR."""
         ext = os.path.splitext(file_path)[1].lower()
         
+        # 1. Try MarkItDown first
+        if cls._md:
+            try:
+                result = cls._md.convert(file_path)
+                if result and result.text_content:
+                    # Clean the markdown content
+                    clean_text = cls.basic_clean(result.text_content)
+                    return cls.remove_noise(clean_text)
+            except Exception as e:
+                print(f"MarkItDown failed for {file_path}: {e}. Falling back to legacy extractors.")
+
+        # 2. Legacy Fallback
         raw_text = ""
         if ext == '.pdf':
             raw_text = cls.extract_text_from_pdf(file_path)

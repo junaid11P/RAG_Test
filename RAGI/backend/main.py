@@ -101,7 +101,7 @@ async def root():
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     # 1. Validation
-    allowed_extensions = {".pdf", ".txt", ".docx", ".doc", ".png", ".jpg", ".jpeg", ".tiff"}
+    allowed_extensions = {".pdf", ".txt", ".docx", ".doc", ".png", ".jpg", ".jpeg", ".tiff", ".xlsx", ".pptx", ".csv", ".html"}
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail=f"Supported formats: {', '.join(allowed_extensions)}")
