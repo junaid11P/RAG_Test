@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const ChatPage = ({
+    apiBase,
     user,
     usage,
     uploading,
@@ -25,10 +26,8 @@ const ChatPage = ({
 }) => {
     const [showModels, setShowModels] = React.useState(false);
 
-    // Base URL for media assets (same as API)
-    const API_BASE_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:8000'
-        : ''; // In production, it's same origin
+    // Base URL for media assets
+    const API_BASE_URL = apiBase;
 
     return (
         <>

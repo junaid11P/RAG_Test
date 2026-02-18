@@ -251,6 +251,7 @@ function App() {
       <div className={`main-content ${view !== 'chat' ? 'scrollable' : ''}`}>
         {view === 'chat' ? (
           <ChatPage
+            apiBase={API_BASE}
             user={user}
             usage={usage}
             uploading={uploading}
