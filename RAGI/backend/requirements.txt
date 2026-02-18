@@ -1,6 +1,5 @@
 fastapi
 uvicorn
-pymupdf
 python-multipart
 langchain-community
 langchain-text-splitters
@@ -10,9 +9,5 @@ groq
 motor
 passlib[bcrypt]
 python-jose[cryptography]
-python-docx
 email-validator
-pdfplumber
-Pillow
-pytesseract
-markdown[all]
+markitdown[all]

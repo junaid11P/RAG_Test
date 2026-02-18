@@ -1,12 +1,12 @@
 # RAGI - Premium Intelligent Document Chat
 
-A high-performance RAG (Retrieval-Augmented Generation) platform designed for seamless interaction with PDF, TXT, and Word documents. Built with a focus on speed, aesthetics, and scalability.
+A high-performance RAG (Retrieval-Augmented Generation) platform designed for seamless interaction with a wide array of document formats. Powered by a unified **Microsoft MarkItDown** pipeline for consistent and intelligent text extraction across PDF, Office, and more.
 
 ---
 
 ## 🚀 Key Features
 
-- **Multi-format Support**: Intelligent extraction from PDF, DOCX, and TXT files.
+- **Multi-format Support**: Intelligent extraction from PDF, DOCX, XLSX, PPTX, CSV, and Images using **Microsoft MarkItDown**.
 - **Ultra-Light RAG Pipeline**: Powered by **FastEmbed (ONNX)** for high-speed embeddings without the overhead of heavy deep learning frameworks.
 - **Glassmorphism UI**: A stunning, modern design built with **React** and **Framer Motion** for a premium user experience.
 - **Cloud Vector Search**: Leverages **MongoDB Atlas Vector Search** for scalable, zero-latency document retrieval.
@@ -19,6 +19,7 @@ A high-performance RAG (Retrieval-Augmented Generation) platform designed for se
 
 ### Backend
 - **Framework**: FastAPI (High-performance Python framework)
+- **Processing**: Microsoft MarkItDown (Universal document-to-markdown conversion)
 - **Orchestration**: LangChain (Modular RAG architecture)
 - **Embeddings**: FastEmbed (Optimized ONNX Runtime - Ultra-low memory footprint)
 - **LLM**: Groq (Llama 3.3 70B - Blazing fast inference)
