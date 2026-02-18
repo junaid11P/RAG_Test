@@ -31,8 +31,8 @@ class DocumentProcessor:
                 base_url="https://api.groq.com/openai/v1",
                 api_key=api_key
             )
-            # Use Llama 3.2 Vision for high-quality image-to-text conversion
-            return MarkItDown(llm_client=client, llm_model="llama-3.2-11b-vision-preview")
+            # Use Llama 4 Scout for state-of-the-art vision reasoning (current as of 2026)
+            return MarkItDown(llm_client=client, llm_model="meta-llama/llama-4-scout-17b-16e-instruct")
         
         return MarkItDown()
 
