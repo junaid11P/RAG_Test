@@ -2,22 +2,39 @@ import re
 import os
 import io
 import uuid
-import tempfile
 from typing import List, Optional
 from app.db.mongodb import db
 
 try:
     from markitdown import MarkItDown
+    from openai import OpenAI
 except ImportError:
     MarkItDown = None
+    OpenAI = None
 
 class DocumentProcessor:
     """
-    Unified Document Processor using Microsoft MarkItDown.
-    Handles PDF, DOCX, DOC, XLSX, PPTX, CSV, HTML, Images, etc.
-    Now with automated image extraction and cloud storage.
+    Unified Document Processor using Microsoft MarkItDown with Groq Vision.
+    Handles PDF, Office, and Raw Images with Intelligent OCR.
     """
-    _md = MarkItDown() if MarkItDown else None
+    
+    @classmethod
+    def get_md_engine(cls):
+        """Initializes MarkItDown with Groq Vision capabilities if API key exists."""
+        if not MarkItDown:
+            return None
+            
+        api_key = os.getenv("GROQ_API_KEY")
+        if OpenAI and api_key:
+            # We use the OpenAI-compatible Groq endpoint to bridge with MarkItDown
+            client = OpenAI(
+                base_url="https://api.groq.com/openai/v1",
+                api_key=api_key
+            )
+            # Use Llama 3.2 Vision for high-quality image-to-text conversion
+            return MarkItDown(llm_client=client, llm_model="llama-3.2-11b-vision-preview")
+        
+        return MarkItDown()
 
     @staticmethod
     def basic_clean(text: str) -> str:
@@ -45,30 +62,29 @@ class DocumentProcessor:
     @classmethod
     async def process_document(cls, file_path: str, user_id: str, doc_id: str) -> str:
         """
-        Complete production pipeline using MarkItDown.
-        Extracts images, stores them in GridFS, and embeds Markdown links in text.
+        Complete production pipeline using MarkItDown + Groq Vision.
+        Extracts images, OCRs them using LLM, and stores originals in GridFS.
         """
-        if not cls._md:
-            return "[Error: MarkItDown library not installed or initialized.]"
+        md = cls.get_md_engine()
+        if not md:
+            return "[Error: MarkItDown library not installed.]"
 
         try:
-            # 1. Convert document to Markdown
-            result = cls._md.convert(file_path)
+            # 1. Convert document to Markdown (MarkItDown uses the LLM to describe images found)
+            result = md.convert(file_path)
             if not result or not result.text_content:
                 return "No readable text found in document."
 
             text_content = result.text_content
 
-            # 2. Extract Images if any (MarkItDown extracts them to a temporary location)
-            # We can check for image references in the markdown
-            # e.g., ![image](path/to/image.png)
-            
-            # Simple regex to find image paths in generated markdown
+            # 2. Extract and Proxy Images
+            # We still want to see the original images in the chat, 
+            # while the text context contains the LLM's OCR/description.
             img_pattern = r"!\[.*?\]\((.*?)\)"
             img_matches = re.findall(img_pattern, text_content)
 
             for local_img_path in img_matches:
-                # If it's a local file path relative to the temporary processing dir
+                # If it's a local file path (MarkItDown saves images to temp files during conversion)
                 if os.path.exists(local_img_path):
                     asset_id = str(uuid.uuid4())
                     asset_name = os.path.basename(local_img_path)
@@ -76,8 +92,8 @@ class DocumentProcessor:
                     with open(local_img_path, "rb") as f:
                         file_data = f.read()
                         
-                    # Store in media_fs
-                    grid_id = await db.media_fs.upload_from_stream(
+                    # Store original image in media_fs
+                    await db.media_fs.upload_from_stream(
                         asset_name,
                         file_data,
                         metadata={
@@ -88,7 +104,7 @@ class DocumentProcessor:
                         }
                     )
                     
-                    # Replace the local path with a RAGI proxy URL that the frontend can load
+                    # Replace the local path with a RAGI proxy URL
                     proxy_url = f"/api/media/{asset_id}"
                     text_content = text_content.replace(local_img_path, proxy_url)
 
