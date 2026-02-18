@@ -129,7 +129,7 @@ async def upload_document(file: UploadFile = File(...), user_id: str = Depends(g
             tmp_path = tmp.name
             
         try:
-            clean_text = DocumentProcessor.process_document(tmp_path)
+            clean_text = await DocumentProcessor.process_document(tmp_path, effective_user_id, doc_id)
             await rag_service.create_rag(clean_text, effective_user_id, doc_id)
         finally:
             if os.path.exists(tmp_path):
@@ -163,6 +163,33 @@ async def upload_document(file: UploadFile = File(...), user_id: str = Depends(g
     except Exception as e:
         # Cleanup GridFS on failure
         await db.fs.delete(file_id)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/media/{asset_id}")
+async def get_media_asset(asset_id: str):
+    """Serves extracted images from GridFS via proxy."""
+    try:
+        cursor = db.media_fs.find({"metadata.asset_id": asset_id})
+        grid_out = await cursor.to_list(length=1)
+        if not grid_out:
+            raise HTTPException(status_code=404, detail="Asset not found")
+        
+        asset = grid_out[0]
+        from fastapi.responses import Response
+        content = await asset.read()
+        
+        # Determine content type based on name
+        ext = os.path.splitext(asset.filename)[1].lower()
+        content_type = "image/png"
+        if ext in [".jpg", ".jpeg"]: 
+            content_type = "image/jpeg"
+        elif ext == ".gif": 
+            content_type = "image/gif"
+        elif ext == ".webp": 
+            content_type = "image/webp"
+        
+        return Response(content=content, media_type=content_type)
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/documents")

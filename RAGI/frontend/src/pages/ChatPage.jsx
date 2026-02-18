@@ -2,6 +2,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Activity, ChevronUp, ChevronDown } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const ChatPage = ({
     user,
@@ -22,6 +24,11 @@ const ChatPage = ({
     chatEndRef
 }) => {
     const [showModels, setShowModels] = React.useState(false);
+
+    // Base URL for media assets (same as API)
+    const API_BASE_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:8000'
+        : ''; // In production, it's same origin
 
     return (
         <>
@@ -44,7 +51,31 @@ const ChatPage = ({
                                 animate={{ opacity: 1, scale: 1 }}
                                 className={`message ${msg.role}`}
                             >
-                                {msg.content}
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        img: ({ node, ...props }) => {
+                                            // Handle relative proxy URLs
+                                            const src = props.src.startsWith('/api/media/')
+                                                ? `${API_BASE_URL}${props.src}`
+                                                : props.src;
+                                            return (
+                                                <img
+                                                    {...props}
+                                                    src={src}
+                                                    style={{
+                                                        maxWidth: '100%',
+                                                        borderRadius: '12px',
+                                                        marginTop: '10px',
+                                                        border: '1px solid var(--glass-border)'
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {msg.content}
+                                </ReactMarkdown>
                             </motion.div>
                         ))}
                         {loading && (

@@ -23,6 +23,9 @@ class LLMService:
         context_text = "\n\n".join(context)
         prompt = f"""
         You are an intelligent assistant. Use the provided context to answer the user's question accurately.
+        
+        CRITICAL: The context contains Markdown. If the context includes references to images (e.g., `![image](/api/media/...)`) or tables that are relevant to the user's question, you MUST include those exact Markdown references in your answer so the user can see them.
+        
         If the answer is not in the context, say that you don't know based on the documents.
         
         Context:

@@ -11,6 +11,7 @@ class MongoDB:
     client: AsyncIOMotorClient = None
     db = None
     fs = None
+    media_fs = None # Bucket for extracted media assets
 
 db = MongoDB()
 
@@ -18,11 +19,12 @@ async def connect_to_mongo():
     db.client = AsyncIOMotorClient(MONGODB_URL)
     db.db = db.client[DB_NAME]
     db.fs = AsyncIOMotorGridFSBucket(db.db)
+    db.media_fs = AsyncIOMotorGridFSBucket(db.db, bucket_name="media_assets")
     
     # Create Unique Index on Email
     await db.db["users"].create_index("email", unique=True)
     
-    print("Connected to MongoDB & GridFS (Unique Email Index ensured)")
+    print("Connected to MongoDB & GridFS (Media bucket enabled)")
 
 async def close_mongo_connection():
     db.client.close()
