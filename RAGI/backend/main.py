@@ -1,4 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header, Request
+from fastapi.responses import JSONResponse
+import logging
+import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 import os
@@ -25,15 +28,31 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 @app.middleware("http")
-async def add_cors_headers(request, call_next):
+async def add_cors_headers(request: Request, call_next):
+    # This middleware manually injects headers on EVERY response
     response = await call_next(request)
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"FATAL ERROR: {str(exc)}")
+    print(traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Server Error", "message": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*"
+        }
+    )
 
 async def cleanup_expired_docs():
     """Background task to delete expired files and DB entries every hour."""
