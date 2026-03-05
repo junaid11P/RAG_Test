@@ -7,6 +7,7 @@ class PaymentService:
     async def submit_verification(user_id: str, utr_number: str, email: str, type: str = "upgrade"):
         """Submits a new payment/support verification request."""
         verification_id = str(uuid.uuid4())
+        now = datetime.utcnow()
         verification_data = {
             "id": verification_id,
             "user_id": user_id,
@@ -14,8 +15,10 @@ class PaymentService:
             "email": email,
             "type": type,
             "status": "pending",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
+            "created_at": now,
+            "created_date": now.strftime("%Y-%m-%d"),
+            "created_time": now.strftime("%H:%M:%S"),
+            "updated_at": now
         }
         await db.db["payment_verifications"].insert_one(verification_data)
         return verification_id

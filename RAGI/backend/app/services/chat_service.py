@@ -6,13 +6,16 @@ class ChatService:
     @staticmethod
     async def save_message(user_id: str, doc_id: str, role: str, content: str, email: str = None, expires_at=None):
         """Saves a single chat message to the database."""
+        now = datetime.utcnow()
         await db.db["conversation_history"].insert_one({
             "user_id": user_id,
             "email": email,
             "doc_id": doc_id,
             "role": role,
             "content": content,
-            "timestamp": datetime.utcnow(),
+            "timestamp": now,
+            "timestamp_date": now.strftime("%Y-%m-%d"),
+            "timestamp_time": now.strftime("%H:%M:%S"),
             "expires_at": expires_at
         })
 

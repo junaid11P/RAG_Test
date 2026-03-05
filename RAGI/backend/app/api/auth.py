@@ -29,11 +29,14 @@ async def register(user_in: UserCreate):
             raise HTTPException(status_code=400, detail="Email already registered")
         
         user_id = str(uuid.uuid4())
+        now = datetime.utcnow()
         user_dict = {
             "id": user_id,
             "email": user_in.email,
             "hashed_password": get_password_hash(user_in.password),
-            "created_at": datetime.utcnow(),
+            "created_at": now,
+            "created_date": now.strftime("%Y-%m-%d"),
+            "created_time": now.strftime("%H:%M:%S"),
             "usage": {
                 "files_uploaded": 0,
                 "api_calls": 0,

@@ -20,6 +20,8 @@ class RAGService:
         chunks = self.text_splitter.split_text(text)
         print(f"DEBUG: Created {len(chunks)} chunks. Generating embeddings...")
         
+        from datetime import datetime
+        now = datetime.utcnow()
         vector_data = []
         for i, chunk in enumerate(chunks):
             # Print progress every 10 chunks to avoid spam
@@ -33,6 +35,9 @@ class RAGService:
                 "doc_id": doc_id,
                 "text": chunk,
                 "embedding": embedding,
+                "created_at": now,
+                "created_date": now.strftime("%Y-%m-%d"),
+                "created_time": now.strftime("%H:%M:%S"),
                 "expires_at": expires_at
             })
         

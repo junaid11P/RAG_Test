@@ -173,6 +173,7 @@ async def upload_document(file: UploadFile = File(...), user = Depends(get_curre
         from datetime import timedelta
         expiry = datetime.utcnow() + (timedelta(days=2) if not is_guest else timedelta(days=1))
         
+        now = datetime.utcnow()
         doc_meta = {
             "id": doc_id,
             "user_id": user_id if user_id else effective_user_id,
@@ -180,7 +181,9 @@ async def upload_document(file: UploadFile = File(...), user = Depends(get_curre
             "file_id": str(file_id),
             "name": file.filename,
             "file_size": file_size,
-            "created_at": datetime.utcnow(),
+            "created_at": now,
+            "created_date": now.strftime("%Y-%m-%d"),
+            "created_time": now.strftime("%H:%M:%S"),
             "expires_at": expiry,
             "is_premium": False,
             "is_guest": is_guest,

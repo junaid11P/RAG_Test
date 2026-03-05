@@ -31,10 +31,13 @@ class UsageService:
     async def track_api_call(user_id: str, email: str = None):
         """Logs a query event for the user."""
         from datetime import datetime
+        now = datetime.utcnow()
         await db.db["query_logs"].insert_one({
             "user_id": user_id,
             "email": email,
-            "timestamp": datetime.utcnow()
+            "timestamp": now,
+            "timestamp_date": now.strftime("%Y-%m-%d"),
+            "timestamp_time": now.strftime("%H:%M:%S")
         })
 
     @staticmethod
@@ -77,13 +80,19 @@ class UsageService:
 
     @staticmethod
     async def get_guest_query_count(guest_id: str) -> int:
-        """Retrieves and increments the query count for a guest."""
+        """Retrieves and increments the query count for a guest, tracking timestamps."""
         from datetime import datetime
+        now = datetime.utcnow()
         guest = await db.db["guest_sessions"].find_one_and_update(
             {"id": guest_id},
             {
                 "$inc": {"queries": 1},
-                "$setOnInsert": {"created_at": datetime.utcnow()}
+                "$set": {
+                    "last_active_at": now,
+                    "last_active_date": now.strftime("%Y-%m-%d"),
+                    "last_active_time": now.strftime("%H:%M:%S")
+                },
+                "$setOnInsert": {"created_at": now}
             },
             upsert=True,
             return_document=True
