@@ -124,6 +124,16 @@ async def get_current_user_required(user_id: str = Depends(get_current_user)):
 async def root():
     return {"message": "RAG SaaS Backend is running"}
 
+@app.get("/health")
+async def health():
+    try:
+        from app.db.mongodb import db
+        # Try a simple ping
+        await db.client.admin.command('ping')
+        return {"status": "healthy", "db": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     # 1. Validation
