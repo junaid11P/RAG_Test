@@ -45,13 +45,31 @@ async def register(user_in: UserCreate):
         return UserResponse(id=user_id, email=user_in.email, created_at=user_dict["created_at"])
     except Exception as e:
         print(f"DATABASE/AUTH ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # If it's a 500, we return the error in JSON so the user can see it in the browser
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Registration Failed", "error": str(e)},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+from fastapi.responses import JSONResponse
 
 @router.post("/login")
 async def login(user_in: UserLogin):
-    user = await db.db["users"].find_one({"email": user_in.email})
-    if not user or not verify_password(user_in.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    access_token = create_access_token(data={"sub": user["id"]})
-    return {"access_token": access_token, "token_type": "bearer", "user_id": user["id"]}
+    try:
+        user = await db.db["users"].find_one({"email": user_in.email})
+        if not user or not verify_password(user_in.password, user["hashed_password"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        access_token = create_access_token(data={"sub": user["id"]})
+        return {"access_token": access_token, "token_type": "bearer", "user_id": user["id"]}
+    except HTTPException as he:
+        # Re-raise actual 401s
+        raise he
+    except Exception as e:
+        print(f"LOGIN ERROR: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Login Failed", "error": str(e)},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
