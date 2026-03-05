@@ -7,8 +7,8 @@ fastembed
 python-dotenv
 groq
 motor
-passlib[bcrypt]
-bcrypt
+passlib[argon2]
+argon2-cffi
 python-jose[cryptography]
 cryptography
 email-validator

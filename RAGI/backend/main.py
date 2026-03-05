@@ -123,7 +123,7 @@ async def get_current_user_required(user_id: str = Depends(get_current_user)):
 
 @app.get("/")
 async def root():
-    return {"message": "RAG SaaS Backend is running"}
+    return {"message": "RAG SaaS Backend is running", "version": "2.0.0"}
 
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
