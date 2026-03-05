@@ -1,8 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import logging
-import traceback
 from jose import JWTError, jwt
 import os
 import uuid
@@ -28,30 +25,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
-
-@app.middleware("http")
-async def add_cors_header(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    print(f"CRITICAL ERROR: {str(exc)}")
-    print(traceback.format_exc())
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error", "error": str(exc)},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Methods": "*"
-        }
-    )
 
 async def cleanup_expired_docs():
     """Background task to delete expired files and DB entries every hour."""
@@ -124,16 +98,6 @@ async def get_current_user_required(user_id: str = Depends(get_current_user)):
 async def root():
     return {"message": "RAG SaaS Backend is running"}
 
-@app.get("/health")
-async def health():
-    try:
-        from app.db.mongodb import db
-        # Try a simple ping
-        await db.client.admin.command('ping')
-        return {"status": "healthy", "db": "connected"}
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
-
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
     # 1. Validation
@@ -201,7 +165,33 @@ async def upload_document(file: UploadFile = File(...), user_id: str = Depends(g
         await db.fs.delete(file_id)
         raise HTTPException(status_code=500, detail=str(e))
 
-
+@app.get("/api/media/{asset_id}")
+async def get_media_asset(asset_id: str):
+    """Serves extracted images from GridFS via proxy."""
+    try:
+        # Note: media_fs must be initialized in mongodb.py
+        cursor = db.media_fs.find({"metadata.asset_id": asset_id})
+        grid_out = await cursor.to_list(length=1)
+        if not grid_out:
+            raise HTTPException(status_code=404, detail="Asset not found")
+        
+        asset = grid_out[0]
+        from fastapi.responses import Response
+        content = await asset.read()
+        
+        # Determine content type based on name
+        ext = os.path.splitext(asset.filename)[1].lower()
+        content_type = "image/png"
+        if ext in [".jpg", ".jpeg"]: 
+            content_type = "image/jpeg"
+        elif ext == ".gif": 
+            content_type = "image/gif"
+        elif ext == ".webp": 
+            content_type = "image/webp"
+        
+        return Response(content=content, media_type=content_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/documents")
 async def list_documents(user_id: str = Depends(get_current_user_required)):
@@ -383,6 +373,6 @@ async def get_payment_status(user_id: str = Depends(get_current_user_required)):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use $PORT from environment (default to 8000 for local)
+    # Render requires listening on the $PORT environment variable
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
