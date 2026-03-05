@@ -7,38 +7,23 @@ from app.db.mongodb import db
 
 try:
     from markitdown import MarkItDown
-    from openai import OpenAI
 except ImportError:
     MarkItDown = None
-    OpenAI = None
 
 class DocumentProcessor:
-    """
-    Unified Document Processor using Microsoft MarkItDown with Groq Vision.
-    Handles PDF, Office, and Raw Images with Intelligent OCR.
-    """
-    
     @classmethod
     def get_md_engine(cls):
-        """Initializes MarkItDown with Groq Vision capabilities if API key exists."""
+        """Initializes MarkItDown without vision capabilities to ignore images."""
         if not MarkItDown:
             return None
             
-        api_key = os.getenv("GROQ_API_KEY")
-        if OpenAI and api_key:
-            # We use the OpenAI-compatible Groq endpoint to bridge with MarkItDown
-            client = OpenAI(
-                base_url="https://api.groq.com/openai/v1",
-                api_key=api_key
-            )
-            # Use Llama 4 Scout for state-of-the-art vision reasoning (current as of 2026)
-            return MarkItDown(llm_client=client, llm_model="meta-llama/llama-4-scout-17b-16e-instruct")
-        
         return MarkItDown()
 
     @staticmethod
     def basic_clean(text: str) -> str:
         """Cleans text while preserving structural characters like | for tables."""
+        # Remove common icon/image placeholders that might be left as text
+        text = re.sub(r"\[image\]|\[icon\]|\[pic\]", "", text, flags=re.IGNORECASE)
         text = re.sub(r"[^\x00-\x7F]+", " ", text)
         text = re.sub(r"[ \t]+", " ", text)
         return text.strip()
@@ -62,61 +47,45 @@ class DocumentProcessor:
     @classmethod
     async def process_document(cls, file_path: str, user_id: str, doc_id: str) -> str:
         """
-        Complete production pipeline using MarkItDown + Groq Vision.
-        Extracts images, OCRs them using LLM, and stores originals in GridFS.
+        Complete production pipeline using MarkItDown.
+        Ignores images and icons while preserving text and tables.
+        Runs in a separate thread to prevent blocking the event loop.
         """
+        import asyncio
+        from concurrent.futures import ThreadPoolExecutor
+
         md = cls.get_md_engine()
         if not md:
             return "[Error: MarkItDown library not installed.]"
 
         try:
-            # 1. Convert document to Markdown (MarkItDown uses the LLM to describe images found)
-            result = md.convert(file_path)
+            print(f"DEBUG: Starting conversion for {file_path}...")
+            # 1. Convert document to Markdown (Run in thread to prevent blocking)
+            loop = asyncio.get_event_loop()
+            with ThreadPoolExecutor() as pool:
+                result = await loop.run_in_executor(pool, md.convert, file_path)
+            
             if not result or not result.text_content:
                 return "No readable text found in document."
 
             text_content = result.text_content
+            print(f"DEBUG: Conversion complete. Content length: {len(text_content)}")
 
-            # 2. Extract and Proxy Images
-            # We still want to see the original images in the chat, 
-            # while the text context contains the LLM's OCR/description.
-            img_pattern = r"!\[.*?\]\((.*?)\)"
-            img_matches = re.findall(img_pattern, text_content)
-
-            for local_img_path in img_matches:
-                # If it's a local file path (MarkItDown saves images to temp files during conversion)
-                if os.path.exists(local_img_path):
-                    asset_id = str(uuid.uuid4())
-                    asset_name = os.path.basename(local_img_path)
-                    
-                    with open(local_img_path, "rb") as f:
-                        file_data = f.read()
-                        
-                    # Store original image in media_fs
-                    await db.media_fs.upload_from_stream(
-                        asset_name,
-                        file_data,
-                        metadata={
-                            "user_id": user_id,
-                            "doc_id": doc_id,
-                            "asset_id": asset_id,
-                            "type": "extracted_image"
-                        }
-                    )
-                    
-                    # Replace the local path with a RAGI proxy URL
-                    proxy_url = f"/api/media/{asset_id}"
-                    text_content = text_content.replace(local_img_path, proxy_url)
-
+            # 2. Remove all image/icon references (Markdown image tags)
+            # This ensures images are ignored in the final storage
+            # We use a more robust regex for markdown images
+            text_content = re.sub(r"!\[.*?\]\(.*?\)", "", text_content)
+            
             # 3. Clean and Finalize
             clean_text = cls.basic_clean(text_content)
             final_text = cls.remove_noise(clean_text)
             
             if not final_text.strip():
-                return "Document appeared empty after processing."
+                return "Document appeared empty after processing (images/icons were ignored)."
                 
+            print(f"DEBUG: Processing finished. Final text length: {len(final_text)}")
             return final_text
 
         except Exception as e:
-            print(f"MarkItDown conversion error: {e}")
+            print(f"DEBUG: MarkItDown conversion error: {e}")
             return f"[Processing Error: {str(e)}]"

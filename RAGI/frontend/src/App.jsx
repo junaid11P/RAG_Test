@@ -144,7 +144,13 @@ function App() {
 
     try {
       const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
-      const response = await axios.post(`${API_BASE}/upload`, formData, { headers });
+      const response = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: {
+          ...headers,
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 300000 // 5 minute timeout for large PDFs/initial AI model loading
+      });
       setDocId(response.data.doc_id);
       if (!user) setGuestId(response.data.user_id);
       setFile(selectedFile);
@@ -157,7 +163,9 @@ function App() {
         fetchDocuments(user.token);
       }
     } catch (error) {
-      alert('Upload failed. Please check connection.');
+      console.error("Upload error:", error);
+      const detail = error.response?.data?.detail || error.message;
+      alert(`Upload failed: ${detail}`);
     } finally {
       setUploading(false);
     }

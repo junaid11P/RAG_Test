@@ -16,10 +16,16 @@ class RAGService:
 
     async def create_rag(self, text: str, user_id: str, doc_id: str):
         """Chunks text and stores in MongoDB Atlas Vector Search."""
+        print(f"DEBUG: Chunking text for {doc_id}...")
         chunks = self.text_splitter.split_text(text)
+        print(f"DEBUG: Created {len(chunks)} chunks. Generating embeddings...")
         
         vector_data = []
-        for chunk in chunks:
+        for i, chunk in enumerate(chunks):
+            # Print progress every 10 chunks to avoid spam
+            if i % 10 == 0:
+                print(f"DEBUG: Processing chunk {i}/{len(chunks)}...")
+            
             embedding = self.embeddings.embed_query(chunk)
             vector_data.append({
                 "user_id": user_id,
@@ -29,7 +35,9 @@ class RAGService:
             })
         
         if vector_data:
+            print(f"DEBUG: Uploading {len(vector_data)} vectors to Atlas...")
             await db.db[self.collection_name].insert_many(vector_data)
+            print("DEBUG: Vector storage complete.")
         
         return f"mongodb_vector_{doc_id}"
 

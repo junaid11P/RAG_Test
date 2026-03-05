@@ -26,8 +26,7 @@ const ChatPage = ({
 }) => {
     const [showModels, setShowModels] = React.useState(false);
 
-    // Base URL for media assets
-    const API_BASE_URL = apiBase;
+
 
     return (
         <>
@@ -52,26 +51,6 @@ const ChatPage = ({
                             >
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
-                                    components={{
-                                        img: ({ node, ...props }) => {
-                                            // Handle relative proxy URLs
-                                            const src = props.src.startsWith('/api/media/')
-                                                ? `${API_BASE_URL}${props.src}`
-                                                : props.src;
-                                            return (
-                                                <img
-                                                    {...props}
-                                                    src={src}
-                                                    style={{
-                                                        maxWidth: '100%',
-                                                        borderRadius: '12px',
-                                                        marginTop: '10px',
-                                                        border: '1px solid var(--glass-border)'
-                                                    }}
-                                                />
-                                            );
-                                        }
-                                    }}
                                 >
                                     {msg.content}
                                 </ReactMarkdown>
