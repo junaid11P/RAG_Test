@@ -68,8 +68,9 @@ async def cleanup_expired_docs():
                 doc_id = doc["id"]
                 file_id = doc.get("file_id")
                 
-                # 1. Delete Vectors
-                await db.db["vectors"].delete_many({"doc_id": doc_id})
+                # 1. Delete Embeddings and History
+                await db.db["document_embeddings"].delete_many({"doc_id": doc_id})
+                await db.db["conversation_history"].delete_many({"doc_id": doc_id})
                 
                 # 2. Delete Original File from GridFS
                 if file_id:
@@ -111,22 +112,28 @@ async def get_current_user(authorization: str = Header(None)):
     try:
         token = authorization.split(" ")[1]
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        return user_id
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        if not user_id:
+            return None
+        return {"user_id": user_id, "email": email}
     except (JWTError, IndexError):
         return None
 
-async def get_current_user_required(user_id: str = Depends(get_current_user)):
-    if not user_id:
+async def get_current_user_required(user = Depends(get_current_user)):
+    if not user:
         raise HTTPException(status_code=401, detail="Authentication required for this action")
-    return user_id
+    return user
 
 @app.get("/")
 async def root():
     return {"message": "RAG SaaS Backend is running", "version": "2.0.0"}
 
 @app.post("/upload")
-async def upload_document(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
+async def upload_document(file: UploadFile = File(...), user = Depends(get_current_user)):
+    user_id = user["user_id"] if user else None
+    email = user["email"] if user else None
+
     # 1. Validation
     allowed_extensions = {".pdf", ".txt", ".docx", ".doc", ".xlsx", ".pptx", ".csv", ".html"}
     file_ext = os.path.splitext(file.filename)[1].lower()
@@ -145,7 +152,7 @@ async def upload_document(file: UploadFile = File(...), user_id: str = Depends(g
     file_id = await db.fs.upload_from_stream(
         file.filename,
         file_content,
-        metadata={"user_id": effective_user_id, "doc_id": doc_id}
+        metadata={"user_id": effective_user_id, "email": email, "doc_id": doc_id}
     )
 
     # 3. Process
@@ -157,26 +164,34 @@ async def upload_document(file: UploadFile = File(...), user_id: str = Depends(g
             
         try:
             clean_text = await DocumentProcessor.process_document(tmp_path, effective_user_id, doc_id)
-            await rag_service.create_rag(clean_text, effective_user_id, doc_id)
+            # Create RAG will be called after saving metadata now to ensure expires_at is consistent
         finally:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
         
-        # 4. Save Metadata ONLY if logged in
+        # 4. Save Metadata (Always, including guests)
+        from datetime import timedelta
+        expiry = datetime.utcnow() + (timedelta(days=2) if not is_guest else timedelta(days=1))
+        
+        doc_meta = {
+            "id": doc_id,
+            "user_id": user_id if user_id else effective_user_id,
+            "email": email,
+            "file_id": str(file_id),
+            "name": file.filename,
+            "file_size": file_size,
+            "created_at": datetime.utcnow(),
+            "expires_at": expiry,
+            "is_premium": False,
+            "is_guest": is_guest,
+            "api_key": None
+        }
+        await db.db["documents"].insert_one(doc_meta)
+        
+        # 5. Track Usage and Create RAG with Expiry
+        await rag_service.create_rag(clean_text, effective_user_id, doc_id, email=email, expires_at=expiry)
+        
         if not is_guest:
-            from datetime import timedelta
-            doc_meta = {
-                "id": doc_id,
-                "user_id": user_id,
-                "file_id": str(file_id),
-                "name": file.filename,
-                "file_size": file_size,
-                "created_at": datetime.utcnow(),
-                "expires_at": datetime.utcnow() + timedelta(days=2), # 2 days trial
-                "is_premium": False,
-                "api_key": None
-            }
-            await db.db["documents"].insert_one(doc_meta)
             await UsageService.track_upload(user_id, file_size)
         
         return {
@@ -221,7 +236,8 @@ async def get_media_asset(asset_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/documents")
-async def list_documents(user_id: str = Depends(get_current_user_required)):
+async def list_documents(user = Depends(get_current_user_required)):
+    user_id = user["user_id"]
     cursor = db.db["documents"].find({"user_id": user_id})
     docs = await cursor.to_list(length=100)
     # Convert Mongo _id to string for JSON serialization
@@ -230,7 +246,8 @@ async def list_documents(user_id: str = Depends(get_current_user_required)):
     return docs
 
 @app.delete("/documents/{doc_id}")
-async def delete_document(doc_id: str, user_id: str = Depends(get_current_user_required)):
+async def delete_document(doc_id: str, user = Depends(get_current_user_required)):
+    user_id = user["user_id"]
     doc = await db.db["documents"].find_one({"id": doc_id, "user_id": user_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -238,11 +255,11 @@ async def delete_document(doc_id: str, user_id: str = Depends(get_current_user_r
     # 1. Delete from DB
     await db.db["documents"].delete_one({"id": doc_id, "user_id": user_id})
     
-    # 2. Delete Vectors
-    await db.db["vectors"].delete_many({"doc_id": doc_id, "user_id": user_id})
+    # 2. Delete Embeddings
+    await db.db["document_embeddings"].delete_many({"doc_id": doc_id, "user_id": user_id})
     
-    # 2.5 Delete Chat History
-    await db.db["chat_history"].delete_many({"doc_id": doc_id, "user_id": user_id})
+    # 2.5 Delete Conversation History
+    await db.db["conversation_history"].delete_many({"doc_id": doc_id, "user_id": user_id})
     
     # 3. Delete from GridFS
     file_id = doc.get("file_id")
@@ -258,10 +275,11 @@ async def delete_document(doc_id: str, user_id: str = Depends(get_current_user_r
     # 4. Update Usage Stats
     await UsageService.track_delete(user_id, file_size)
     
-    return {"status": "success", "message": "Document, vectors, and chat history purged permanently from Atlas"}
+    return {"status": "success", "message": "Document, embeddings, and conversation history purged permanently from Atlas"}
 
 @app.get("/documents/{doc_id}/history")
-async def get_document_history(doc_id: str, user_id: str = Depends(get_current_user)):
+async def get_document_history(doc_id: str, user = Depends(get_current_user)):
+    user_id = user["user_id"] if user else None
     identity = user_id if user_id else None # We only persist for logged in users in this logic
     if not identity:
         return []
@@ -270,7 +288,8 @@ async def get_document_history(doc_id: str, user_id: str = Depends(get_current_u
     return history
 
 @app.post("/documents/{doc_id}/api-key")
-async def generate_api_key(doc_id: str, user_id: str = Depends(get_current_user_required)):
+async def generate_api_key(doc_id: str, user = Depends(get_current_user_required)):
+    user_id = user["user_id"]
     new_key = f"RAGI_{uuid.uuid4().hex}"
     res = await db.db["documents"].update_one(
         {"id": doc_id, "user_id": user_id},
@@ -281,7 +300,8 @@ async def generate_api_key(doc_id: str, user_id: str = Depends(get_current_user_
     return {"status": "success", "api_key": new_key}
 
 @app.post("/documents/{doc_id}/upgrade")
-async def upgrade_to_premium(doc_id: str, user_id: str = Depends(get_current_user_required)):
+async def upgrade_to_premium(doc_id: str, user = Depends(get_current_user_required)):
+    user_id = user["user_id"]
     """Simulate payment and make the document permanent."""
     res = await db.db["documents"].update_one(
         {"id": doc_id, "user_id": user_id},
@@ -304,8 +324,8 @@ async def external_query(query: str, x_api_key: str = Header(None)):
     doc_id = doc["id"]
     user_id = doc["user_id"]
 
-    # Check if doc exists in vectors
-    doc_exists = await db.db["vectors"].find_one({"doc_id": doc_id, "user_id": user_id})
+    # Check if doc exists in embeddings
+    doc_exists = await db.db["document_embeddings"].find_one({"doc_id": doc_id, "user_id": user_id})
     if not doc_exists:
         raise HTTPException(status_code=404, detail="Document index not found in Atlas.")
 
@@ -313,9 +333,9 @@ async def external_query(query: str, x_api_key: str = Header(None)):
     answer = llm_service.generate_answer(query, context)
     
     # Save to history & usage
-    await ChatService.save_message(user_id, doc_id, "user", f"[API] {query}")
-    await ChatService.save_message(user_id, doc_id, "system", answer)
-    await UsageService.track_api_call(user_id)
+    await ChatService.save_message(user_id, doc_id, "user", f"[API] {query}", email=doc.get("email"), expires_at=doc.get("expires_at"))
+    await ChatService.save_message(user_id, doc_id, "system", answer, email=doc.get("email"), expires_at=doc.get("expires_at"))
+    await UsageService.track_api_call(user_id, email=doc.get("email"))
     
     return {
         "query": query,
@@ -324,8 +344,10 @@ async def external_query(query: str, x_api_key: str = Header(None)):
     }
 
 @app.post("/query")
-async def query_document(doc_id: str, query: str, user_id: str = Depends(get_current_user), guest_id: str = None):
+async def query_document(doc_id: str, query: str, user = Depends(get_current_user), guest_id: str = None):
     # Determine the effective identity
+    user_id = user["user_id"] if user else None
+    email = user["email"] if user else None
     identity = user_id if user_id else guest_id
     
     if not identity:
@@ -338,7 +360,10 @@ async def query_document(doc_id: str, query: str, user_id: str = Depends(get_cur
         q_count = await UsageService.get_guest_query_count(identity)
         if q_count > 3:
             # Purge Guest Data from Atlas
-            await db.db["vectors"].delete_many({"user_id": identity})
+            await db.db["document_embeddings"].delete_many({"user_id": identity})
+            
+            # Delete associated documents record
+            await db.db["documents"].delete_many({"user_id": identity, "is_guest": True})
             
             # Find and delete guest files from GridFS
             cursor = db.fs.find({"metadata.user_id": identity})
@@ -350,8 +375,15 @@ async def query_document(doc_id: str, query: str, user_id: str = Depends(get_cur
                 detail="Free trial limit reached. Guest data has been purged from Atlas. Please login to continue."
             )
 
-    # Check if doc exists in vectors
-    doc_exists = await db.db["vectors"].find_one({"doc_id": doc_id, "user_id": identity})
+    # Check if doc exists and get expiry
+    doc = await db.db["documents"].find_one({"id": doc_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found or expired.")
+    
+    expires_at = doc.get("expires_at")
+
+    # Check if doc exists in embeddings
+    doc_exists = await db.db["document_embeddings"].find_one({"doc_id": doc_id, "user_id": identity})
     if not doc_exists:
         raise HTTPException(status_code=404, detail="Document index not found in Atlas for this session.")
 
@@ -360,9 +392,9 @@ async def query_document(doc_id: str, query: str, user_id: str = Depends(get_cur
     
     # Save to history if logged in
     if not is_guest:
-        await ChatService.save_message(user_id, doc_id, "user", query)
-        await ChatService.save_message(user_id, doc_id, "system", answer)
-        await UsageService.track_api_call(user_id)
+        await ChatService.save_message(user_id, doc_id, "user", query, email=email, expires_at=expires_at)
+        await ChatService.save_message(user_id, doc_id, "system", answer, email=email, expires_at=expires_at)
+        await UsageService.track_api_call(user_id, email=email)
     
     return {
         "query": query,
@@ -372,7 +404,8 @@ async def query_document(doc_id: str, query: str, user_id: str = Depends(get_cur
     }
 
 @app.get("/usage")
-async def get_usage(user_id: str = Depends(get_current_user_required)):
+async def get_usage(user = Depends(get_current_user_required)):
+    user_id = user["user_id"]
     usage_stats = await UsageService.get_usage(user_id)
     if not usage_stats:
         raise HTTPException(status_code=404, detail="User not found")
@@ -381,8 +414,9 @@ async def get_usage(user_id: str = Depends(get_current_user_required)):
 @app.post("/api/payments/verify")
 async def submit_payment_verification(
     data: dict, 
-    user_id: str = Depends(get_current_user_required)
+    user = Depends(get_current_user_required)
 ):
+    user_id = user["user_id"]
     utr = data.get("utr_number")
     email = data.get("email")
     v_type = data.get("type", "upgrade")
@@ -394,7 +428,8 @@ async def submit_payment_verification(
     return {"status": "success", "verification_id": vid, "message": "Verification request submitted successfully"}
 
 @app.get("/api/payments/status")
-async def get_payment_status(user_id: str = Depends(get_current_user_required)):
+async def get_payment_status(user = Depends(get_current_user_required)):
+    user_id = user["user_id"]
     verifications = await PaymentService.get_user_verifications(user_id)
     return verifications
 

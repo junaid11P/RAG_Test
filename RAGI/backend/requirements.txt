@@ -13,5 +13,4 @@ python-jose[cryptography]
 cryptography
 email-validator
 markitdown[all]
-openai
 gunicorn

@@ -61,8 +61,8 @@ async def login(user_in: UserLogin):
         if not user or not verify_password(user_in.password, user["hashed_password"]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        access_token = create_access_token(data={"sub": user["id"]})
-        return {"access_token": access_token, "token_type": "bearer", "user_id": user["id"]}
+        access_token = create_access_token(data={"sub": user["id"], "email": user["email"]})
+        return {"access_token": access_token, "token_type": "bearer", "user_id": user["id"], "email": user["email"]}
     except HTTPException as he:
         # Re-raise actual 401s
         raise he

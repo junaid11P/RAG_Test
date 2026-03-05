@@ -12,9 +12,9 @@ class RAGService:
             chunk_size=500,
             chunk_overlap=50
         )
-        self.collection_name = "vectors"
+        self.collection_name = "document_embeddings"
 
-    async def create_rag(self, text: str, user_id: str, doc_id: str):
+    async def create_rag(self, text: str, user_id: str, doc_id: str, email: str = None, expires_at=None):
         """Chunks text and stores in MongoDB Atlas Vector Search."""
         print(f"DEBUG: Chunking text for {doc_id}...")
         chunks = self.text_splitter.split_text(text)
@@ -29,9 +29,11 @@ class RAGService:
             embedding = self.embeddings.embed_query(chunk)
             vector_data.append({
                 "user_id": user_id,
+                "email": email,
                 "doc_id": doc_id,
                 "text": chunk,
-                "embedding": embedding
+                "embedding": embedding,
+                "expires_at": expires_at
             })
         
         if vector_data:

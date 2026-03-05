@@ -28,11 +28,12 @@ class UsageService:
         )
 
     @staticmethod
-    async def track_api_call(user_id: str):
+    async def track_api_call(user_id: str, email: str = None):
         """Logs a query event for the user."""
         from datetime import datetime
-        await db.db["queries"].insert_one({
+        await db.db["query_logs"].insert_one({
             "user_id": user_id,
+            "email": email,
             "timestamp": datetime.utcnow()
         })
 
@@ -59,7 +60,7 @@ class UsageService:
         actual_bytes = doc_stats[0]["bytes"] if doc_stats else 0
         
         # Calculate actual queries from the queries collection
-        query_count = await db.db["queries"].count_documents({"user_id": user_id})
+        query_count = await db.db["query_logs"].count_documents({"user_id": user_id})
         
         # Simple Pricing Strategy (MVP)
         # $0.1 per MB
@@ -77,9 +78,13 @@ class UsageService:
     @staticmethod
     async def get_guest_query_count(guest_id: str) -> int:
         """Retrieves and increments the query count for a guest."""
-        guest = await db.db["guests"].find_one_and_update(
+        from datetime import datetime
+        guest = await db.db["guest_sessions"].find_one_and_update(
             {"id": guest_id},
-            {"$inc": {"queries": 1}},
+            {
+                "$inc": {"queries": 1},
+                "$setOnInsert": {"created_at": datetime.utcnow()}
+            },
             upsert=True,
             return_document=True
         )

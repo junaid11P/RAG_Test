@@ -4,20 +4,22 @@ from typing import List, Dict
 
 class ChatService:
     @staticmethod
-    async def save_message(user_id: str, doc_id: str, role: str, content: str):
+    async def save_message(user_id: str, doc_id: str, role: str, content: str, email: str = None, expires_at=None):
         """Saves a single chat message to the database."""
-        await db.db["chat_history"].insert_one({
+        await db.db["conversation_history"].insert_one({
             "user_id": user_id,
+            "email": email,
             "doc_id": doc_id,
             "role": role,
             "content": content,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.utcnow(),
+            "expires_at": expires_at
         })
 
     @staticmethod
     async def get_history(user_id: str, doc_id: str) -> List[Dict]:
         """Retrieves chat history for a specific document and user."""
-        cursor = db.db["chat_history"].find(
+        cursor = db.db["conversation_history"].find(
             {"user_id": user_id, "doc_id": doc_id}
         ).sort("timestamp", 1)
         
