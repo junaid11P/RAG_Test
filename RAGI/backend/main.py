@@ -20,9 +20,17 @@ from app.core.security import SECRET_KEY, ALGORITHM
 app = FastAPI(title="RAG SaaS API")
 
 # Setup CORS for frontend
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://ragimodels.vercel.app",
+    "https://ragimodels-git-main-junaid11ps-projects.vercel.app", # Potential preview URL
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
