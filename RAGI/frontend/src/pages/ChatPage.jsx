@@ -54,6 +54,33 @@ const ChatPage = ({
                                 >
                                     {msg.content}
                                 </ReactMarkdown>
+                                
+                                {msg.confidence_score !== undefined && (
+                                    <div style={{ marginTop: '10px', padding: '8px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', fontSize: '12px', borderLeft: '2px solid var(--groq-orange)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontWeight: 'bold', color: 'var(--groq-orange)' }}>
+                                                STCA Confidence: {msg.confidence_score}%
+                                            </span>
+                                            {msg.source_format && (
+                                                <span style={{ 
+                                                    fontSize: '10px', 
+                                                    padding: '2px 6px', 
+                                                    background: 'rgba(255,255,255,0.1)', 
+                                                    borderRadius: '4px',
+                                                    textTransform: 'uppercase',
+                                                    opacity: 0.8
+                                                }}>
+                                                    SOURCE: {msg.source_format}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {msg.reasoning && (
+                                            <div style={{ opacity: 0.7, marginTop: '4px' }}>
+                                                Reasoning: {msg.reasoning}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </motion.div>
                         ))}
                         {loading && (

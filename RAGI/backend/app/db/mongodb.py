@@ -11,7 +11,6 @@ class MongoDB:
     client: AsyncIOMotorClient = None
     db = None
     fs = None
-    media_fs = None
 
 db = MongoDB()
 
@@ -19,7 +18,6 @@ async def connect_to_mongo():
     db.client = AsyncIOMotorClient(MONGODB_URL)
     db.db = db.client[DB_NAME]
     db.fs = AsyncIOMotorGridFSBucket(db.db)
-    db.media_fs = AsyncIOMotorGridFSBucket(db.db, bucket_name="media")
     
     # Standard Index: Unique Email for Users
     await db.db["users"].create_index("email", unique=True)
@@ -38,7 +36,7 @@ async def connect_to_mongo():
     # 4. Delete conversation history if it has an 'expires_at' field
     await db.db["conversation_history"].create_index("expires_at", expireAfterSeconds=0)
     
-    print("Connected to MongoDB & GridFS (Main + Media)")
+    print("Connected to MongoDB & GridFS (Main)")
     print("TTL Indexes initialized: Guest sessions and expired documents will be auto-purged.")
 
 async def close_mongo_connection():

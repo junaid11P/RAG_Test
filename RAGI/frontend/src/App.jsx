@@ -25,7 +25,7 @@ function App() {
   const [guestId, setGuestId] = useState(null);
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState([
-    { role: 'system', content: 'Hello! Upload a PDF, TXT, or Word file to start chatting.' }
+    { role: 'system', content: 'Hello! Upload a PDF, JPG, Excel, TXT, or Word file to start chatting.' }
   ]);
   const [loading, setLoading] = useState(false);
   const [usage, setUsage] = useState(null);
@@ -156,7 +156,7 @@ function App() {
       setFile(selectedFile);
       setMessages(prev => [...prev, {
         role: 'system',
-        content: `Processed "${selectedFile.name}". ${!user ? 'You have 3 free queries.' : ''}`
+        content: `Processed "${selectedFile.name}". ${!user ? 'You have 5 free queries.' : ''}`
       }]);
       if (user) {
         fetchUsage(user.token);
@@ -196,7 +196,13 @@ function App() {
         botMsg += `\n\n(Guest limit: ${remaining} queries remaining)`;
       }
 
-      setMessages(prev => [...prev, { role: 'system', content: botMsg }]);
+      setMessages(prev => [...prev, {
+        role: 'system',
+        content: botMsg,
+        confidence_score: response.data.confidence_score,
+        reasoning: response.data.reasoning,
+        source_format: response.data.source_format
+      }]);
       if (user) fetchUsage(user.token);
     } catch (error) {
       if (error.response?.status === 403 || error.response?.status === 401) {

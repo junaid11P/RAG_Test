@@ -14,3 +14,8 @@ cryptography
 email-validator
 markitdown[all]
 gunicorn
+langgraph
+langchain
+langchain-groq
+pymupdf
+Pillow

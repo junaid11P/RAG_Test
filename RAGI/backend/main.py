@@ -5,6 +5,11 @@ import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 import os
+
+# Fix HuggingFace/FastEmbed symlink privileges error on Windows
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
+
 import uuid
 import asyncio
 from datetime import datetime
@@ -19,8 +24,19 @@ from app.services.payment_service import PaymentService
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.api.auth import router as auth_router
 from app.core.security import SECRET_KEY, ALGORITHM
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="RAG SaaS API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup DB Client
+    await connect_to_mongo()
+    cleanup_task = asyncio.create_task(cleanup_expired_docs())
+    yield
+    # Shutdown DB Client
+    cleanup_task.cancel()
+    await close_mongo_connection()
+
+app = FastAPI(title="RAG SaaS API", lifespan=lifespan)
 
 # Setup CORS for frontend
 app.add_middleware(
@@ -31,19 +47,11 @@ app.add_middleware(
     expose_headers=["*"]
 )
 
-@app.middleware("http")
-async def add_cors_headers(request: Request, call_next):
-    # This middleware manually injects headers on EVERY response
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    print(f"FATAL ERROR: {str(exc)}")
-    print(traceback.format_exc())
+    logging.error(f"FATAL ERROR: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Server Error", "message": str(exc)},
@@ -53,6 +61,32 @@ async def global_exception_handler(request: Request, exc: Exception):
             "Access-Control-Allow-Headers": "*"
         }
     )
+
+async def purge_document_data(doc_id: str, file_id: str = None, user_id: str = None):
+    """Helper to cleanly purge all artifacts related to a document."""
+    try:
+        # 1. Delete Embeddings and History
+        query = {"doc_id": doc_id}
+        if user_id:
+            query["user_id"] = user_id
+            
+        await db.db["document_embeddings"].delete_many(query)
+        await db.db["conversation_history"].delete_many(query)
+        
+        # 2. Delete Original File from GridFS
+        if file_id:
+            try:
+                from bson import ObjectId
+                await db.fs.delete(ObjectId(file_id))
+            except Exception as e:
+                logging.warning(f"Failed to delete GridFS file {file_id} for doc {doc_id}: {e}")
+                
+        # 3. Delete from documents collection
+        await db.db["documents"].delete_one(query)
+        return True
+    except Exception as e:
+        logging.error(f"Error purging document {doc_id}: {e}")
+        return False
 
 async def cleanup_expired_docs():
     """Background task to delete expired files and DB entries every hour."""
@@ -68,37 +102,21 @@ async def cleanup_expired_docs():
                 doc_id = doc["id"]
                 file_id = doc.get("file_id")
                 
-                # 1. Delete Embeddings and History
-                await db.db["document_embeddings"].delete_many({"doc_id": doc_id})
-                await db.db["conversation_history"].delete_many({"doc_id": doc_id})
-                
-                # 2. Delete Original File from GridFS
-                if file_id:
-                    try:
-                        from bson import ObjectId
-                        await db.fs.delete(ObjectId(file_id))
-                    except:
-                        pass
-                
-                # 3. Delete from DB
-                await db.db["documents"].delete_one({"id": doc_id})
-                print(f"Purged expired doc: {doc['name']}")
-                
+                success = await purge_document_data(doc_id, file_id)
+                if success:
+                    logging.info(f"Purged expired doc: {doc.get('name', doc_id)}")
+                    
         except Exception as e:
-            print(f"Cleanup error: {e}")
+            logging.error(f"Cleanup error during batch processing: {e}")
             
-        await asyncio.sleep(3600) # Run every hour
-
-# Lifespan events
-@app.on_event("startup")
-async def startup_db_client():
-    await connect_to_mongo()
-    import asyncio
-    asyncio.create_task(cleanup_expired_docs())
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    await close_mongo_connection()
+        # Ensure we always sleep and loop, even if earlier code fails
+        try:
+            await asyncio.sleep(3600) # Run every hour
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logging.error(f"Error in cleanup sleep: {e}")
+            await asyncio.sleep(60) # Fallback sleep to avoid tight loop on error
 
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
@@ -135,7 +153,12 @@ async def upload_document(file: UploadFile = File(...), user = Depends(get_curre
     email = user["email"] if user else None
 
     # 1. Validation
-    allowed_extensions = {".pdf", ".txt", ".docx", ".doc", ".xlsx", ".pptx", ".csv", ".html"}
+    allowed_extensions = {
+        ".pdf", ".txt", ".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt", 
+        ".csv", ".json", ".xml", ".md", ".html", ".htm",
+        ".jpg", ".jpeg", ".png", ".bmp", ".wav", ".mp3", ".m4a",
+        ".zip", ".epub"
+    }
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail=f"Supported formats: {', '.join(allowed_extensions)}")
@@ -210,34 +233,6 @@ async def upload_document(file: UploadFile = File(...), user = Depends(get_curre
         await db.fs.delete(file_id)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/media/{asset_id}")
-async def get_media_asset(asset_id: str):
-    """Serves extracted images from GridFS via proxy."""
-    try:
-        # Note: media_fs must be initialized in mongodb.py
-        cursor = db.media_fs.find({"metadata.asset_id": asset_id})
-        grid_out = await cursor.to_list(length=1)
-        if not grid_out:
-            raise HTTPException(status_code=404, detail="Asset not found")
-        
-        asset = grid_out[0]
-        from fastapi.responses import Response
-        content = await asset.read()
-        
-        # Determine content type based on name
-        ext = os.path.splitext(asset.filename)[1].lower()
-        content_type = "image/png"
-        if ext in [".jpg", ".jpeg"]: 
-            content_type = "image/jpeg"
-        elif ext == ".gif": 
-            content_type = "image/gif"
-        elif ext == ".webp": 
-            content_type = "image/webp"
-        
-        return Response(content=content, media_type=content_type)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/documents")
 async def list_documents(user = Depends(get_current_user_required)):
     user_id = user["user_id"]
@@ -255,25 +250,12 @@ async def delete_document(doc_id: str, user = Depends(get_current_user_required)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # 1. Delete from DB
-    await db.db["documents"].delete_one({"id": doc_id, "user_id": user_id})
-    
-    # 2. Delete Embeddings
-    await db.db["document_embeddings"].delete_many({"doc_id": doc_id, "user_id": user_id})
-    
-    # 2.5 Delete Conversation History
-    await db.db["conversation_history"].delete_many({"doc_id": doc_id, "user_id": user_id})
-    
-    # 3. Delete from GridFS
     file_id = doc.get("file_id")
     file_size = doc.get("file_size", 0)
     
-    if file_id:
-        from bson import ObjectId
-        try:
-            await db.fs.delete(ObjectId(file_id))
-        except:
-            pass
+    success = await purge_document_data(doc_id, file_id, user_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to completely purge document")
     
     # 4. Update Usage Stats
     await UsageService.track_delete(user_id, file_size)
@@ -332,8 +314,11 @@ async def external_query(query: str, x_api_key: str = Header(None)):
     if not doc_exists:
         raise HTTPException(status_code=404, detail="Document index not found in Atlas.")
 
-    context = await rag_service.query_rag(doc_id, query, user_id)
-    answer = llm_service.generate_answer(query, context)
+    from app.services.stca_graph import STCAGraph
+    stca_graph = STCAGraph(llm_service, rag_service)
+    
+    result = await stca_graph.execute(query, doc_id, user_id)
+    answer = result.get("answer", "")
     
     # Save to history & usage
     await ChatService.save_message(user_id, doc_id, "user", f"[API] {query}", email=doc.get("email"), expires_at=doc.get("expires_at"))
@@ -343,8 +328,15 @@ async def external_query(query: str, x_api_key: str = Header(None)):
     return {
         "query": query,
         "answer": answer,
-        "doc_name": doc["name"]
+        "doc_name": doc["name"],
+        "confidence_score": result.get("confidence_score"),
+        "sources": result.get("sources"),
+        "reasoning": result.get("reasoning"),
+        "source_type": result.get("source_type"),
+        "note": result.get("note")
     }
+
+
 
 @app.post("/query")
 async def query_document(doc_id: str, query: str, user = Depends(get_current_user), guest_id: str = None):
@@ -361,7 +353,7 @@ async def query_document(doc_id: str, query: str, user = Depends(get_current_use
     if is_guest:
         # Increment and get count
         q_count = await UsageService.get_guest_query_count(identity)
-        if q_count > 3:
+        if q_count > 5:
             # Purge Guest Data from Atlas
             await db.db["document_embeddings"].delete_many({"user_id": identity})
             
@@ -390,8 +382,14 @@ async def query_document(doc_id: str, query: str, user = Depends(get_current_use
     if not doc_exists:
         raise HTTPException(status_code=404, detail="Document index not found in Atlas for this session.")
 
-    context = await rag_service.query_rag(doc_id, query, identity)
-    answer = llm_service.generate_answer(query, context)
+    # Instantiate LangGraph STCA-RAG
+    from app.services.stca_graph import STCAGraph
+    stca_graph = STCAGraph(llm_service, rag_service)
+    
+    # Execute Pipeline
+    result = await stca_graph.execute(query, doc_id, identity)
+    
+    answer = result.get("answer", "")
     
     # Save to history if logged in
     if not is_guest:
@@ -399,12 +397,15 @@ async def query_document(doc_id: str, query: str, user = Depends(get_current_use
         await ChatService.save_message(user_id, doc_id, "system", answer, email=email, expires_at=expires_at)
         await UsageService.track_api_call(user_id, email=email)
     
-    return {
-        "query": query,
-        "answer": answer,
-        "is_temporary": is_guest,
-        "queries_remaining": max(0, 3 - q_count) if is_guest else "Unlimited"
-    }
+    # Add frontend compatibility fields
+    result["is_temporary"] = is_guest
+    result["queries_remaining"] = max(0, 5 - q_count) if is_guest else "Unlimited"
+    
+    return result
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "STCA-RAG"}
 
 @app.get("/usage")
 async def get_usage(user = Depends(get_current_user_required)):
