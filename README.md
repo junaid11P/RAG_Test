@@ -105,14 +105,15 @@ Run the development server:
 npm run dev
 ```
 
-
 ---
 
-## 📸 Screenshots
+## 🖼️ Architecture & Logic
 
-*(Refer to core architecture and presentation diagrams in the root directory)*
-- `stca_rag_architecture_diagram.png`
-- `stca_presentation_diagram.png`
+### 🔄 STCA Pipeline
+![STCA Pipeline](STCA%20Pipeline.png)
+
+### 📈 STCA Confidence Formula
+![STCA Confidence Formula](STCA%20Confidence%20Formula.png)
 
 ---
 Developed with ❤️ by Senior Software Engineer.
