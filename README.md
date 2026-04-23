@@ -116,4 +116,4 @@ npm run dev
 ![STCA Confidence Formula](STCA%20Confidence%20Formula.png)
 
 ---
-Developed with ❤️ by Senior Software Engineer.
+Developed with ❤️ by Juned.
